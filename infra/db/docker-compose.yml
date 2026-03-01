@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: zk_health
+      POSTGRES_USER: zk_user
+      POSTGRES_PASSWORD: zk_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - zkhealth_pgdata:/var/lib/postgresql/data
+
+volumes:
+  zkhealth_pgdata:
