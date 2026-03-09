@@ -23,14 +23,14 @@ function getHostBinPath() {
   return path.resolve(process.cwd(), p);
 }
 
-async function verifyStarkReceipt(receiptB64) {
+async function wrapStarkReceiptToGroth16(receiptB64) {
   if (!receiptB64 || typeof receiptB64 !== "string") {
     throw new Error("receiptB64 must be a non-empty base64 string");
   }
 
   const tmpOut = path.join(
     os.tmpdir(),
-    `stark_verify_out_${Date.now()}_${Math.random()}.json`,
+    `hybrid_wrap_out_${Date.now()}_${Math.random()}.json`,
   );
   const bin = getHostBinPath();
 
@@ -38,10 +38,10 @@ async function verifyStarkReceipt(receiptB64) {
     throw new Error(`STARK host binary not found at: ${bin}`);
   }
 
-  await runBin(bin, ["--verify-receipt", receiptB64, "--out", tmpOut]);
+  await runBin(bin, ["--wrap-receipt", receiptB64, "--out", tmpOut]);
 
   if (!fs.existsSync(tmpOut)) {
-    throw new Error("STARK verifier did not produce output file");
+    throw new Error("Hybrid wrapper did not produce output file");
   }
 
   const out = JSON.parse(fs.readFileSync(tmpOut, "utf8"));
@@ -50,8 +50,13 @@ async function verifyStarkReceipt(receiptB64) {
   } catch {}
 
   return {
-    verifiedOk: out.verifiedOk ?? out.verified_ok ?? false,
+    wrappedOk: out.wrappedOk ?? out.wrapped_ok ?? false,
+    wrapTimeMs: out.wrapTimeMs ?? out.wrap_time_ms ?? null,
     verifyTimeMs: out.verifyTimeMs ?? out.verify_time_ms ?? null,
+    totalTimeMs: out.totalTimeMs ?? out.total_time_ms ?? null,
+    snarkReceiptSizeBytes:
+      out.snarkReceiptSizeBytes ?? out.snark_receipt_size_bytes ?? null,
+    snarkReceiptB64: out.snarkReceiptB64 ?? out.snark_receipt_b64 ?? null,
     receiptKind: out.receiptKind ?? out.receipt_kind ?? null,
     isGroth16: out.isGroth16 ?? out.is_groth16 ?? null,
     journal: out.journal ?? null,
@@ -59,4 +64,4 @@ async function verifyStarkReceipt(receiptB64) {
   };
 }
 
-module.exports = { verifyStarkReceipt };
+module.exports = { wrapStarkReceiptToGroth16 };

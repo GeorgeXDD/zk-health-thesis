@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS proof_requests (
   doctor_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
   predicates JSONB NOT NULL,  -- e.g. ["HIV_NEGATIVE"]
+  proof_system TEXT NOT NULL DEFAULT 'GROTH16'
+    CHECK (proof_system IN ('GROTH16', 'STARK', 'HYBRID')),
   nonce TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'EXPIRED', 'FULFILLED')),
   expires_at TIMESTAMPTZ NOT NULL,

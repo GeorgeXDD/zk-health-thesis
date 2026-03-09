@@ -23,14 +23,14 @@ function getHostBinPath() {
   return path.resolve(process.cwd(), p);
 }
 
-async function verifyStarkReceipt(receiptB64) {
-  if (!receiptB64 || typeof receiptB64 !== "string") {
-    throw new Error("receiptB64 must be a non-empty base64 string");
+async function verifyHybridWrappedReceipt(snarkReceiptB64) {
+  if (!snarkReceiptB64 || typeof snarkReceiptB64 !== "string") {
+    throw new Error("snarkReceiptB64 must be a non-empty base64 string");
   }
 
   const tmpOut = path.join(
     os.tmpdir(),
-    `stark_verify_out_${Date.now()}_${Math.random()}.json`,
+    `hybrid_verify_out_${Date.now()}_${Math.random()}.json`,
   );
   const bin = getHostBinPath();
 
@@ -38,10 +38,15 @@ async function verifyStarkReceipt(receiptB64) {
     throw new Error(`STARK host binary not found at: ${bin}`);
   }
 
-  await runBin(bin, ["--verify-receipt", receiptB64, "--out", tmpOut]);
+  await runBin(bin, [
+    "--verify-groth16-receipt",
+    snarkReceiptB64,
+    "--out",
+    tmpOut,
+  ]);
 
   if (!fs.existsSync(tmpOut)) {
-    throw new Error("STARK verifier did not produce output file");
+    throw new Error("Hybrid wrapped verifier did not produce output file");
   }
 
   const out = JSON.parse(fs.readFileSync(tmpOut, "utf8"));
@@ -59,4 +64,4 @@ async function verifyStarkReceipt(receiptB64) {
   };
 }
 
-module.exports = { verifyStarkReceipt };
+module.exports = { verifyHybridWrappedReceipt };
