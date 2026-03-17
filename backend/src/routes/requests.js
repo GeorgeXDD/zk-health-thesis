@@ -14,6 +14,11 @@ const {
   LDL_PREDICATE,
   FASTING_GLUCOSE_PREDICATE,
   TRIGLYCERIDES_PREDICATE,
+  HDL_PREDICATE,
+  SYSTOLIC_BP_PREDICATE,
+  DIASTOLIC_BP_PREDICATE,
+  BMI_PREDICATE,
+  CREATININE_PREDICATE,
   hivStatusBitFromObservation,
   hepBStatusBitFromObservation,
   hepCStatusBitFromObservation,
@@ -24,6 +29,11 @@ const {
   ldlX10FromObservation,
   fastingGlucoseX10FromObservation,
   triglyceridesX10FromObservation,
+  hdlX10FromObservation,
+  systolicBpX10FromObservation,
+  diastolicBpX10FromObservation,
+  bmiX10FromObservation,
+  creatinineX10FromObservation,
 } = require("../services/predicates");
 
 const {
@@ -60,6 +70,11 @@ const ALLOWED_PREDICATES = new Set([
   LDL_PREDICATE,
   FASTING_GLUCOSE_PREDICATE,
   TRIGLYCERIDES_PREDICATE,
+  HDL_PREDICATE,
+  SYSTOLIC_BP_PREDICATE,
+  DIASTOLIC_BP_PREDICATE,
+  BMI_PREDICATE,
+  CREATININE_PREDICATE,
 ]);
 const ALLOWED_PROOF_SYSTEMS = new Set(["GROTH16", "STARK", "HYBRID", "FHIR"]);
 
@@ -86,6 +101,11 @@ function predicateSelectorsFrom(predicates) {
     ? 1
     : 0;
   const reqTriglycerides = predicates.includes(TRIGLYCERIDES_PREDICATE) ? 1 : 0;
+  const reqHdl = predicates.includes(HDL_PREDICATE) ? 1 : 0;
+  const reqSystolicBp = predicates.includes(SYSTOLIC_BP_PREDICATE) ? 1 : 0;
+  const reqDiastolicBp = predicates.includes(DIASTOLIC_BP_PREDICATE) ? 1 : 0;
+  const reqBmi = predicates.includes(BMI_PREDICATE) ? 1 : 0;
+  const reqCreatinine = predicates.includes(CREATININE_PREDICATE) ? 1 : 0;
   return {
     reqHiv,
     reqHepB,
@@ -97,6 +117,11 @@ function predicateSelectorsFrom(predicates) {
     reqLdl,
     reqFastingGlucose,
     reqTriglycerides,
+    reqHdl,
+    reqSystolicBp,
+    reqDiastolicBp,
+    reqBmi,
+    reqCreatinine,
   };
 }
 
@@ -123,6 +148,16 @@ function filterDecodedForDoctor(predicates, decodedAll) {
       filtered.outFastingGlucoseOk = decodedAll.outFastingGlucoseOk;
     if (predicates.includes(TRIGLYCERIDES_PREDICATE))
       filtered.outTriglyceridesOk = decodedAll.outTriglyceridesOk;
+    if (predicates.includes(HDL_PREDICATE))
+      filtered.outHdlOk = decodedAll.outHdlOk;
+    if (predicates.includes(SYSTOLIC_BP_PREDICATE))
+      filtered.outSystolicBpOk = decodedAll.outSystolicBpOk;
+    if (predicates.includes(DIASTOLIC_BP_PREDICATE))
+      filtered.outDiastolicBpOk = decodedAll.outDiastolicBpOk;
+    if (predicates.includes(BMI_PREDICATE))
+      filtered.outBmiOk = decodedAll.outBmiOk;
+    if (predicates.includes(CREATININE_PREDICATE))
+      filtered.outCreatinineOk = decodedAll.outCreatinineOk;
   }
 
   if (decodedAll.nonceField !== undefined && decodedAll.nonceField !== null) {
@@ -145,6 +180,11 @@ function decodeFromHybridJournal(journal) {
     "out_ldl_ok",
     "out_fasting_glucose_ok",
     "out_triglycerides_ok",
+    "out_hdl_ok",
+    "out_systolic_bp_ok",
+    "out_diastolic_bp_ok",
+    "out_bmi_ok",
+    "out_creatinine_ok",
     "nonce_field",
     "req_hiv",
     "req_hepb",
@@ -156,6 +196,11 @@ function decodeFromHybridJournal(journal) {
     "req_ldl",
     "req_fasting_glucose",
     "req_triglycerides",
+    "req_hdl",
+    "req_systolic_bp",
+    "req_diastolic_bp",
+    "req_bmi",
+    "req_creatinine",
   ];
   for (const key of required) {
     if (j[key] === undefined || j[key] === null) {
@@ -173,6 +218,11 @@ function decodeFromHybridJournal(journal) {
     outLdlOk: Number(j.out_ldl_ok),
     outFastingGlucoseOk: Number(j.out_fasting_glucose_ok),
     outTriglyceridesOk: Number(j.out_triglycerides_ok),
+    outHdlOk: Number(j.out_hdl_ok),
+    outSystolicBpOk: Number(j.out_systolic_bp_ok),
+    outDiastolicBpOk: Number(j.out_diastolic_bp_ok),
+    outBmiOk: Number(j.out_bmi_ok),
+    outCreatinineOk: Number(j.out_creatinine_ok),
     nonceField: String(j.nonce_field),
     reqHiv: Number(j.req_hiv),
     reqHepB: Number(j.req_hepb),
@@ -184,6 +234,11 @@ function decodeFromHybridJournal(journal) {
     reqLdl: Number(j.req_ldl),
     reqFastingGlucose: Number(j.req_fasting_glucose),
     reqTriglycerides: Number(j.req_triglycerides),
+    reqHdl: Number(j.req_hdl),
+    reqSystolicBp: Number(j.req_systolic_bp),
+    reqDiastolicBp: Number(j.req_diastolic_bp),
+    reqBmi: Number(j.req_bmi),
+    reqCreatinine: Number(j.req_creatinine),
   };
 }
 
@@ -199,6 +254,11 @@ function decodedShapeEquals(a, b) {
     String(a?.outLdlOk) === String(b?.outLdlOk) &&
     String(a?.outFastingGlucoseOk) === String(b?.outFastingGlucoseOk) &&
     String(a?.outTriglyceridesOk) === String(b?.outTriglyceridesOk) &&
+    String(a?.outHdlOk) === String(b?.outHdlOk) &&
+    String(a?.outSystolicBpOk) === String(b?.outSystolicBpOk) &&
+    String(a?.outDiastolicBpOk) === String(b?.outDiastolicBpOk) &&
+    String(a?.outBmiOk) === String(b?.outBmiOk) &&
+    String(a?.outCreatinineOk) === String(b?.outCreatinineOk) &&
     String(a?.nonceField) === String(b?.nonceField) &&
     String(a?.reqHiv) === String(b?.reqHiv) &&
     String(a?.reqHepB) === String(b?.reqHepB) &&
@@ -209,7 +269,12 @@ function decodedShapeEquals(a, b) {
     String(a?.reqTotalChol) === String(b?.reqTotalChol) &&
     String(a?.reqLdl) === String(b?.reqLdl) &&
     String(a?.reqFastingGlucose) === String(b?.reqFastingGlucose) &&
-    String(a?.reqTriglycerides) === String(b?.reqTriglycerides)
+    String(a?.reqTriglycerides) === String(b?.reqTriglycerides) &&
+    String(a?.reqHdl) === String(b?.reqHdl) &&
+    String(a?.reqSystolicBp) === String(b?.reqSystolicBp) &&
+    String(a?.reqDiastolicBp) === String(b?.reqDiastolicBp) &&
+    String(a?.reqBmi) === String(b?.reqBmi) &&
+    String(a?.reqCreatinine) === String(b?.reqCreatinine)
   );
 }
 
@@ -412,6 +477,11 @@ router.post(
         reqLdl,
         reqFastingGlucose,
         reqTriglycerides,
+        reqHdl,
+        reqSystolicBp,
+        reqDiastolicBp,
+        reqBmi,
+        reqCreatinine,
       } = predicateSelectorsFrom(predicates);
       if (
         reqHiv === 0 &&
@@ -423,7 +493,12 @@ router.post(
         reqTotalChol === 0 &&
         reqLdl === 0 &&
         reqFastingGlucose === 0 &&
-        reqTriglycerides === 0
+        reqTriglycerides === 0 &&
+        reqHdl === 0 &&
+        reqSystolicBp === 0 &&
+        reqDiastolicBp === 0 &&
+        reqBmi === 0 &&
+        reqCreatinine === 0
       ) {
         await client.query("ROLLBACK");
         return res
@@ -467,6 +542,16 @@ router.post(
       let fastingGlucoseHash = null;
       let triglyceridesObs = null;
       let triglyceridesHash = null;
+      let hdlObs = null;
+      let hdlHash = null;
+      let systolicBpObs = null;
+      let systolicBpHash = null;
+      let diastolicBpObs = null;
+      let diastolicBpHash = null;
+      let bmiObs = null;
+      let bmiHash = null;
+      let creatinineObs = null;
+      let creatinineHash = null;
 
       if (reqHiv) {
         const found = findLatestObservation(
@@ -615,6 +700,75 @@ router.post(
         }
       }
 
+      if (reqHdl) {
+        const found = findLatestObservation(allObs.rows, hdlX10FromObservation);
+        hdlObs = found.obs;
+        hdlHash = found.hash;
+        if (!hdlObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No HDL Observation found for patient" });
+        }
+      }
+
+      if (reqSystolicBp) {
+        const found = findLatestObservation(
+          allObs.rows,
+          systolicBpX10FromObservation,
+        );
+        systolicBpObs = found.obs;
+        systolicBpHash = found.hash;
+        if (!systolicBpObs) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            error: "No Systolic blood pressure Observation found for patient",
+          });
+        }
+      }
+
+      if (reqDiastolicBp) {
+        const found = findLatestObservation(
+          allObs.rows,
+          diastolicBpX10FromObservation,
+        );
+        diastolicBpObs = found.obs;
+        diastolicBpHash = found.hash;
+        if (!diastolicBpObs) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            error: "No Diastolic blood pressure Observation found for patient",
+          });
+        }
+      }
+
+      if (reqBmi) {
+        const found = findLatestObservation(allObs.rows, bmiX10FromObservation);
+        bmiObs = found.obs;
+        bmiHash = found.hash;
+        if (!bmiObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No BMI Observation found for patient" });
+        }
+      }
+
+      if (reqCreatinine) {
+        const found = findLatestObservation(
+          allObs.rows,
+          creatinineX10FromObservation,
+        );
+        creatinineObs = found.obs;
+        creatinineHash = found.hash;
+        if (!creatinineObs) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            error: "No Creatinine Observation found for patient",
+          });
+        }
+      }
+
       const hivStatus = reqHiv ? hivStatusBitFromObservation(hivObs) : 0;
       const hepBStatus = reqHepB ? hepBStatusBitFromObservation(hepBObs) : 0;
       const hepCStatus = reqHepC ? hepCStatusBitFromObservation(hepCObs) : 0;
@@ -634,6 +788,17 @@ router.post(
         : 0;
       const triglyceridesX10 = reqTriglycerides
         ? triglyceridesX10FromObservation(triglyceridesObs)
+        : 0;
+      const hdlX10 = reqHdl ? hdlX10FromObservation(hdlObs) : 0;
+      const systolicBpX10 = reqSystolicBp
+        ? systolicBpX10FromObservation(systolicBpObs)
+        : 0;
+      const diastolicBpX10 = reqDiastolicBp
+        ? diastolicBpX10FromObservation(diastolicBpObs)
+        : 0;
+      const bmiX10 = reqBmi ? bmiX10FromObservation(bmiObs) : 0;
+      const creatinineX10 = reqCreatinine
+        ? creatinineX10FromObservation(creatinineObs)
         : 0;
 
       const proofSystem = normalizeProofSystem(
@@ -664,6 +829,11 @@ router.post(
           ldlX10,
           fastingGlucoseX10,
           triglyceridesX10,
+          hdlX10,
+          systolicBpX10,
+          diastolicBpX10,
+          bmiX10,
+          creatinineX10,
           nonce: request.nonce,
           reqHiv,
           reqHepB,
@@ -675,15 +845,22 @@ router.post(
           reqLdl,
           reqFastingGlucose,
           reqTriglycerides,
+          reqHdl,
+          reqSystolicBp,
+          reqDiastolicBp,
+          reqBmi,
+          reqCreatinine,
         });
 
         // publicSignals layout:
         // [outHiv, outHepB, outHepC, outCovid, outPreg, outA1cOk,
         //  outTotalCholOk, outLdlOk, outFastingGlucoseOk, outTriglyceridesOk,
+        //  outHdlOk, outSystolicBpOk, outDiastolicBpOk, outBmiOk, outCreatinineOk,
         //  nonceField, reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c,
-        //  reqTotalChol, reqLdl, reqFastingGlucose, reqTriglycerides]
+        //  reqTotalChol, reqLdl, reqFastingGlucose, reqTriglycerides,
+        //  reqHdl, reqSystolicBp, reqDiastolicBp, reqBmi, reqCreatinine]
         const publicSignals = proverOut.publicSignals || [];
-        if (!Array.isArray(publicSignals) || publicSignals.length < 21) {
+        if (!Array.isArray(publicSignals) || publicSignals.length < 31) {
           throw new Error("Unexpected publicSignals returned by Groth prover");
         }
 
@@ -697,6 +874,11 @@ router.post(
         const outLdlOk = Number(publicSignals[7]);
         const outFastingGlucoseOk = Number(publicSignals[8]);
         const outTriglyceridesOk = Number(publicSignals[9]);
+        const outHdlOk = Number(publicSignals[10]);
+        const outSystolicBpOk = Number(publicSignals[11]);
+        const outDiastolicBpOk = Number(publicSignals[12]);
+        const outBmiOk = Number(publicSignals[13]);
+        const outCreatinineOk = Number(publicSignals[14]);
 
         decoded = {
           outHiv,
@@ -709,17 +891,27 @@ router.post(
           outLdlOk,
           outFastingGlucoseOk,
           outTriglyceridesOk,
-          nonceField: String(publicSignals[10]),
-          reqHiv: Number(publicSignals[11]),
-          reqHepB: Number(publicSignals[12]),
-          reqHepC: Number(publicSignals[13]),
-          reqCovid: Number(publicSignals[14]),
-          reqPreg: Number(publicSignals[15]),
-          reqA1c: Number(publicSignals[16]),
-          reqTotalChol: Number(publicSignals[17]),
-          reqLdl: Number(publicSignals[18]),
-          reqFastingGlucose: Number(publicSignals[19]),
-          reqTriglycerides: Number(publicSignals[20]),
+          outHdlOk,
+          outSystolicBpOk,
+          outDiastolicBpOk,
+          outBmiOk,
+          outCreatinineOk,
+          nonceField: String(publicSignals[15]),
+          reqHiv: Number(publicSignals[16]),
+          reqHepB: Number(publicSignals[17]),
+          reqHepC: Number(publicSignals[18]),
+          reqCovid: Number(publicSignals[19]),
+          reqPreg: Number(publicSignals[20]),
+          reqA1c: Number(publicSignals[21]),
+          reqTotalChol: Number(publicSignals[22]),
+          reqLdl: Number(publicSignals[23]),
+          reqFastingGlucose: Number(publicSignals[24]),
+          reqTriglycerides: Number(publicSignals[25]),
+          reqHdl: Number(publicSignals[26]),
+          reqSystolicBp: Number(publicSignals[27]),
+          reqDiastolicBp: Number(publicSignals[28]),
+          reqBmi: Number(publicSignals[29]),
+          reqCreatinine: Number(publicSignals[30]),
         };
 
         predicatesResult = {};
@@ -736,6 +928,14 @@ router.post(
           predicatesResult.isFastingGlucoseLt100 = outFastingGlucoseOk === 1;
         if (reqTriglycerides)
           predicatesResult.isTriglyceridesLt150 = outTriglyceridesOk === 1;
+        if (reqHdl) predicatesResult.isHdlGt40 = outHdlOk === 1;
+        if (reqSystolicBp)
+          predicatesResult.isSystolicBpLt130 = outSystolicBpOk === 1;
+        if (reqDiastolicBp)
+          predicatesResult.isDiastolicBpLt80 = outDiastolicBpOk === 1;
+        if (reqBmi) predicatesResult.isBmiLt30 = outBmiOk === 1;
+        if (reqCreatinine)
+          predicatesResult.isCreatinineLt1_3 = outCreatinineOk === 1;
 
         proofTypeToStore = "GROTH16";
         proofToStore = proverOut.proof;
@@ -754,6 +954,11 @@ router.post(
             ldl: ldlHash || null,
             fasting_glucose: fastingGlucoseHash || null,
             triglycerides: triglyceridesHash || null,
+            hdl: hdlHash || null,
+            systolic_bp: systolicBpHash || null,
+            diastolic_bp: diastolicBpHash || null,
+            bmi: bmiHash || null,
+            creatinine: creatinineHash || null,
           },
         };
 
@@ -773,6 +978,11 @@ router.post(
           ldlX10,
           fastingGlucoseX10,
           triglyceridesX10,
+          hdlX10,
+          systolicBpX10,
+          diastolicBpX10,
+          bmiX10,
+          creatinineX10,
           nonceField: request.nonce,
           reqHiv,
           reqHepB,
@@ -784,6 +994,11 @@ router.post(
           reqLdl,
           reqFastingGlucose,
           reqTriglycerides,
+          reqHdl,
+          reqSystolicBp,
+          reqDiastolicBp,
+          reqBmi,
+          reqCreatinine,
         });
 
         const j = starkOut.journal || {};
@@ -801,6 +1016,11 @@ router.post(
           outLdlOk: Number(j.out_ldl_ok ?? 0),
           outFastingGlucoseOk: Number(j.out_fasting_glucose_ok ?? 0),
           outTriglyceridesOk: Number(j.out_triglycerides_ok ?? 0),
+          outHdlOk: Number(j.out_hdl_ok ?? 0),
+          outSystolicBpOk: Number(j.out_systolic_bp_ok ?? 0),
+          outDiastolicBpOk: Number(j.out_diastolic_bp_ok ?? 0),
+          outBmiOk: Number(j.out_bmi_ok ?? 0),
+          outCreatinineOk: Number(j.out_creatinine_ok ?? 0),
           nonceField: nonceFieldDec,
           reqHiv: Number(j.req_hiv ?? reqHiv),
           reqHepB: Number(j.req_hepb ?? reqHepB),
@@ -812,6 +1032,11 @@ router.post(
           reqLdl: Number(j.req_ldl ?? reqLdl),
           reqFastingGlucose: Number(j.req_fasting_glucose ?? reqFastingGlucose),
           reqTriglycerides: Number(j.req_triglycerides ?? reqTriglycerides),
+          reqHdl: Number(j.req_hdl ?? reqHdl),
+          reqSystolicBp: Number(j.req_systolic_bp ?? reqSystolicBp),
+          reqDiastolicBp: Number(j.req_diastolic_bp ?? reqDiastolicBp),
+          reqBmi: Number(j.req_bmi ?? reqBmi),
+          reqCreatinine: Number(j.req_creatinine ?? reqCreatinine),
         };
 
         predicatesResult = {};
@@ -832,6 +1057,14 @@ router.post(
         if (reqTriglycerides)
           predicatesResult.isTriglyceridesLt150 =
             decoded.outTriglyceridesOk === 1;
+        if (reqHdl) predicatesResult.isHdlGt40 = decoded.outHdlOk === 1;
+        if (reqSystolicBp)
+          predicatesResult.isSystolicBpLt130 = decoded.outSystolicBpOk === 1;
+        if (reqDiastolicBp)
+          predicatesResult.isDiastolicBpLt80 = decoded.outDiastolicBpOk === 1;
+        if (reqBmi) predicatesResult.isBmiLt30 = decoded.outBmiOk === 1;
+        if (reqCreatinine)
+          predicatesResult.isCreatinineLt1_3 = decoded.outCreatinineOk === 1;
 
         proofTypeToStore = "STARK";
 
@@ -851,6 +1084,11 @@ router.post(
             ldl: ldlHash || null,
             fasting_glucose: fastingGlucoseHash || null,
             triglycerides: triglyceridesHash || null,
+            hdl: hdlHash || null,
+            systolic_bp: systolicBpHash || null,
+            diastolic_bp: diastolicBpHash || null,
+            bmi: bmiHash || null,
+            creatinine: creatinineHash || null,
           },
         };
 
@@ -870,6 +1108,11 @@ router.post(
           ldlX10,
           fastingGlucoseX10,
           triglyceridesX10,
+          hdlX10,
+          systolicBpX10,
+          diastolicBpX10,
+          bmiX10,
+          creatinineX10,
           nonceField: request.nonce,
           reqHiv,
           reqHepB,
@@ -881,6 +1124,11 @@ router.post(
           reqLdl,
           reqFastingGlucose,
           reqTriglycerides,
+          reqHdl,
+          reqSystolicBp,
+          reqDiastolicBp,
+          reqBmi,
+          reqCreatinine,
         });
 
         if (
@@ -923,6 +1171,14 @@ router.post(
         if (reqTriglycerides)
           predicatesResult.isTriglyceridesLt150 =
             decoded.outTriglyceridesOk === 1;
+        if (reqHdl) predicatesResult.isHdlGt40 = decoded.outHdlOk === 1;
+        if (reqSystolicBp)
+          predicatesResult.isSystolicBpLt130 = decoded.outSystolicBpOk === 1;
+        if (reqDiastolicBp)
+          predicatesResult.isDiastolicBpLt80 = decoded.outDiastolicBpOk === 1;
+        if (reqBmi) predicatesResult.isBmiLt30 = decoded.outBmiOk === 1;
+        if (reqCreatinine)
+          predicatesResult.isCreatinineLt1_3 = decoded.outCreatinineOk === 1;
 
         proofTypeToStore = "HYBRID";
         proofToStore = {
@@ -944,6 +1200,11 @@ router.post(
             ldl: ldlHash || null,
             fasting_glucose: fastingGlucoseHash || null,
             triglycerides: triglyceridesHash || null,
+            hdl: hdlHash || null,
+            systolic_bp: systolicBpHash || null,
+            diastolic_bp: diastolicBpHash || null,
+            bmi: bmiHash || null,
+            creatinine: creatinineHash || null,
           },
           hybrid: {
             mode: "HYBRID",
@@ -985,6 +1246,23 @@ router.post(
             ? 1
             : 0
           : 0;
+        const outHdlOk = reqHdl ? (hdlX10 > 400 ? 1 : 0) : 0;
+        const outSystolicBpOk = reqSystolicBp
+          ? systolicBpX10 < 1300
+            ? 1
+            : 0
+          : 0;
+        const outDiastolicBpOk = reqDiastolicBp
+          ? diastolicBpX10 < 800
+            ? 1
+            : 0
+          : 0;
+        const outBmiOk = reqBmi ? (bmiX10 < 300 ? 1 : 0) : 0;
+        const outCreatinineOk = reqCreatinine
+          ? creatinineX10 < 13
+            ? 1
+            : 0
+          : 0;
 
         decoded = {
           outHiv,
@@ -997,6 +1275,11 @@ router.post(
           outLdlOk,
           outFastingGlucoseOk,
           outTriglyceridesOk,
+          outHdlOk,
+          outSystolicBpOk,
+          outDiastolicBpOk,
+          outBmiOk,
+          outCreatinineOk,
           nonceField: nonceFieldDec,
           reqHiv,
           reqHepB,
@@ -1008,6 +1291,11 @@ router.post(
           reqLdl,
           reqFastingGlucose,
           reqTriglycerides,
+          reqHdl,
+          reqSystolicBp,
+          reqDiastolicBp,
+          reqBmi,
+          reqCreatinine,
         };
 
         predicatesResult = {};
@@ -1024,6 +1312,14 @@ router.post(
           predicatesResult.isFastingGlucoseLt100 = outFastingGlucoseOk === 1;
         if (reqTriglycerides)
           predicatesResult.isTriglyceridesLt150 = outTriglyceridesOk === 1;
+        if (reqHdl) predicatesResult.isHdlGt40 = outHdlOk === 1;
+        if (reqSystolicBp)
+          predicatesResult.isSystolicBpLt130 = outSystolicBpOk === 1;
+        if (reqDiastolicBp)
+          predicatesResult.isDiastolicBpLt80 = outDiastolicBpOk === 1;
+        if (reqBmi) predicatesResult.isBmiLt30 = outBmiOk === 1;
+        if (reqCreatinine)
+          predicatesResult.isCreatinineLt1_3 = outCreatinineOk === 1;
 
         proofTypeToStore = "FHIR";
 
@@ -1043,6 +1339,11 @@ router.post(
             ldl: ldlHash || null,
             fasting_glucose: fastingGlucoseHash || null,
             triglycerides: triglyceridesHash || null,
+            hdl: hdlHash || null,
+            systolic_bp: systolicBpHash || null,
+            diastolic_bp: diastolicBpHash || null,
+            bmi: bmiHash || null,
+            creatinine: creatinineHash || null,
           },
           baseline: { kind: "FHIR_ONLY" },
         };
@@ -1320,6 +1621,11 @@ router.post(
         reqLdl,
         reqFastingGlucose,
         reqTriglycerides,
+        reqHdl,
+        reqSystolicBp,
+        reqDiastolicBp,
+        reqBmi,
+        reqCreatinine,
       } = predicateSelectorsFrom(predicates);
 
       const allObs = await pool.query(
@@ -1341,6 +1647,11 @@ router.post(
       let ldlObs = null;
       let fastingGlucoseObs = null;
       let triglyceridesObs = null;
+      let hdlObs = null;
+      let systolicBpObs = null;
+      let diastolicBpObs = null;
+      let bmiObs = null;
+      let creatinineObs = null;
 
       if (reqHiv) {
         hivObs = findLatestObservation(
@@ -1414,11 +1725,9 @@ router.post(
           totalCholesterolX10FromObservation,
         ).obs;
         if (!totalCholObs)
-          return res
-            .status(400)
-            .json({
-              error: "No Total cholesterol Observation found for patient",
-            });
+          return res.status(400).json({
+            error: "No Total cholesterol Observation found for patient",
+          });
       }
 
       if (reqLdl) {
@@ -1435,11 +1744,9 @@ router.post(
           fastingGlucoseX10FromObservation,
         ).obs;
         if (!fastingGlucoseObs)
-          return res
-            .status(400)
-            .json({
-              error: "No Fasting glucose Observation found for patient",
-            });
+          return res.status(400).json({
+            error: "No Fasting glucose Observation found for patient",
+          });
       }
 
       if (reqTriglycerides) {
@@ -1451,6 +1758,55 @@ router.post(
           return res
             .status(400)
             .json({ error: "No Triglycerides Observation found for patient" });
+      }
+
+      if (reqHdl) {
+        hdlObs = findLatestObservation(allObs.rows, hdlX10FromObservation).obs;
+        if (!hdlObs)
+          return res
+            .status(400)
+            .json({ error: "No HDL Observation found for patient" });
+      }
+
+      if (reqSystolicBp) {
+        systolicBpObs = findLatestObservation(
+          allObs.rows,
+          systolicBpX10FromObservation,
+        ).obs;
+        if (!systolicBpObs)
+          return res.status(400).json({
+            error: "No Systolic blood pressure Observation found for patient",
+          });
+      }
+
+      if (reqDiastolicBp) {
+        diastolicBpObs = findLatestObservation(
+          allObs.rows,
+          diastolicBpX10FromObservation,
+        ).obs;
+        if (!diastolicBpObs)
+          return res.status(400).json({
+            error: "No Diastolic blood pressure Observation found for patient",
+          });
+      }
+
+      if (reqBmi) {
+        bmiObs = findLatestObservation(allObs.rows, bmiX10FromObservation).obs;
+        if (!bmiObs)
+          return res
+            .status(400)
+            .json({ error: "No BMI Observation found for patient" });
+      }
+
+      if (reqCreatinine) {
+        creatinineObs = findLatestObservation(
+          allObs.rows,
+          creatinineX10FromObservation,
+        ).obs;
+        if (!creatinineObs)
+          return res
+            .status(400)
+            .json({ error: "No Creatinine Observation found for patient" });
       }
 
       const hivStatus = reqHiv ? hivStatusBitFromObservation(hivObs) : 0;
@@ -1472,6 +1828,17 @@ router.post(
         : 0;
       const triglyceridesX10 = reqTriglycerides
         ? triglyceridesX10FromObservation(triglyceridesObs)
+        : 0;
+      const hdlX10 = reqHdl ? hdlX10FromObservation(hdlObs) : 0;
+      const systolicBpX10 = reqSystolicBp
+        ? systolicBpX10FromObservation(systolicBpObs)
+        : 0;
+      const diastolicBpX10 = reqDiastolicBp
+        ? diastolicBpX10FromObservation(diastolicBpObs)
+        : 0;
+      const bmiX10 = reqBmi ? bmiX10FromObservation(bmiObs) : 0;
+      const creatinineX10 = reqCreatinine
+        ? creatinineX10FromObservation(creatinineObs)
         : 0;
 
       const nonceFieldDec = BigInt("0x" + nonce).toString();
@@ -1495,6 +1862,11 @@ router.post(
             ? 1
             : 0
           : 0,
+        outHdlOk: reqHdl ? (hdlX10 > 400 ? 1 : 0) : 0,
+        outSystolicBpOk: reqSystolicBp ? (systolicBpX10 < 1300 ? 1 : 0) : 0,
+        outDiastolicBpOk: reqDiastolicBp ? (diastolicBpX10 < 800 ? 1 : 0) : 0,
+        outBmiOk: reqBmi ? (bmiX10 < 300 ? 1 : 0) : 0,
+        outCreatinineOk: reqCreatinine ? (creatinineX10 < 13 ? 1 : 0) : 0,
         nonceField: nonceFieldDec,
         reqHiv,
         reqHepB,
@@ -1506,6 +1878,11 @@ router.post(
         reqLdl,
         reqFastingGlucose,
         reqTriglycerides,
+        reqHdl,
+        reqSystolicBp,
+        reqDiastolicBp,
+        reqBmi,
+        reqCreatinine,
       };
 
       // Verify = stored decoded equals recomputed decoded

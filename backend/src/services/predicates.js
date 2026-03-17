@@ -8,6 +8,11 @@ const TOTAL_CHOLESTEROL_PREDICATE = "TOTAL_CHOLESTEROL_LT_200";
 const LDL_PREDICATE = "LDL_LT_130";
 const FASTING_GLUCOSE_PREDICATE = "FASTING_GLUCOSE_LT_100";
 const TRIGLYCERIDES_PREDICATE = "TRIGLYCERIDES_LT_150";
+const HDL_PREDICATE = "HDL_GT_40";
+const SYSTOLIC_BP_PREDICATE = "SYSTOLIC_BP_LT_130";
+const DIASTOLIC_BP_PREDICATE = "DIASTOLIC_BP_LT_80";
+const BMI_PREDICATE = "BMI_LT_30";
+const CREATININE_PREDICATE = "CREATININE_LT_1_3";
 
 const HIV_LOINC_CODES = new Set(["56888-1"]);
 const HEPB_LOINC_CODES = new Set(["5196-1"]);
@@ -18,6 +23,11 @@ const TOTAL_CHOLESTEROL_LOINC_CODES = new Set(["2093-3"]);
 const LDL_LOINC_CODES = new Set(["13457-7"]);
 const FASTING_GLUCOSE_LOINC_CODES = new Set(["1558-6"]);
 const TRIGLYCERIDES_LOINC_CODES = new Set(["2571-8"]);
+const HDL_LOINC_CODES = new Set(["2085-9"]);
+const SYSTOLIC_BP_LOINC_CODES = new Set(["8480-6"]);
+const DIASTOLIC_BP_LOINC_CODES = new Set(["8462-4"]);
+const BMI_LOINC_CODES = new Set(["39156-5"]);
+const CREATININE_LOINC_CODES = new Set(["2160-0"]);
 const SNOMED_NEGATIVE = "260385009";
 
 function getObservationCode(obs) {
@@ -226,6 +236,101 @@ function evaluateTriglyceridesLt150(observation) {
   return triglyceridesX10FromObservation(observation) < 1500;
 }
 
+function x10FromObservation(observation, allowedLoincCodes, label, validUnits) {
+  const loinc = getObservationCode(observation);
+  if (!loinc || !allowedLoincCodes.has(loinc)) {
+    throw new Error(
+      `No matching ${label} Observation found (code=${loinc || "null"})`,
+    );
+  }
+
+  const vq = observation?.valueQuantity;
+  const value = vq?.value;
+  if (value === undefined || value === null || typeof value !== "number") {
+    throw new Error(
+      `${label} Observation.valueQuantity.value must be a number`,
+    );
+  }
+
+  const unitRaw = (vq?.code || vq?.unit || "").toString().trim();
+  const unit = unitRaw.toLowerCase();
+  if (unit && validUnits.size > 0 && !validUnits.has(unit)) {
+    throw new Error(`${label} unit is invalid (got '${unitRaw}')`);
+  }
+
+  const x10 = Math.round(value * 10);
+  if (x10 < 0 || x10 > 10000) {
+    throw new Error(`${label} value out of bounds: ${value}`);
+  }
+
+  return x10;
+}
+
+function hdlX10FromObservation(observation) {
+  return x10FromObservation(
+    observation,
+    HDL_LOINC_CODES,
+    "HDL",
+    new Set(["mg/dl"]),
+  );
+}
+
+function systolicBpX10FromObservation(observation) {
+  return x10FromObservation(
+    observation,
+    SYSTOLIC_BP_LOINC_CODES,
+    "Systolic blood pressure",
+    new Set(["mm[hg]", "mmhg"]),
+  );
+}
+
+function diastolicBpX10FromObservation(observation) {
+  return x10FromObservation(
+    observation,
+    DIASTOLIC_BP_LOINC_CODES,
+    "Diastolic blood pressure",
+    new Set(["mm[hg]", "mmhg"]),
+  );
+}
+
+function bmiX10FromObservation(observation) {
+  return x10FromObservation(
+    observation,
+    BMI_LOINC_CODES,
+    "BMI",
+    new Set(["kg/m2", "kg/m^2"]),
+  );
+}
+
+function creatinineX10FromObservation(observation) {
+  return x10FromObservation(
+    observation,
+    CREATININE_LOINC_CODES,
+    "Creatinine",
+    new Set(["mg/dl"]),
+  );
+}
+
+function evaluateHdlGt40(observation) {
+  return hdlX10FromObservation(observation) > 400;
+}
+
+function evaluateSystolicBpLt130(observation) {
+  return systolicBpX10FromObservation(observation) < 1300;
+}
+
+function evaluateDiastolicBpLt80(observation) {
+  return diastolicBpX10FromObservation(observation) < 800;
+}
+
+function evaluateBmiLt30(observation) {
+  return bmiX10FromObservation(observation) < 300;
+}
+
+function evaluateCreatinineLt1_3(observation) {
+  return creatinineX10FromObservation(observation) < 13;
+}
+
 module.exports = {
   HIV_PREDICATE,
   HEPB_PREDICATE,
@@ -237,6 +342,11 @@ module.exports = {
   LDL_PREDICATE,
   FASTING_GLUCOSE_PREDICATE,
   TRIGLYCERIDES_PREDICATE,
+  HDL_PREDICATE,
+  SYSTOLIC_BP_PREDICATE,
+  DIASTOLIC_BP_PREDICATE,
+  BMI_PREDICATE,
+  CREATININE_PREDICATE,
 
   evaluateHivNegative,
   hivStatusBitFromObservation,
@@ -259,4 +369,14 @@ module.exports = {
   evaluateLdlLt130,
   evaluateFastingGlucoseLt100,
   evaluateTriglyceridesLt150,
+  hdlX10FromObservation,
+  systolicBpX10FromObservation,
+  diastolicBpX10FromObservation,
+  bmiX10FromObservation,
+  creatinineX10FromObservation,
+  evaluateHdlGt40,
+  evaluateSystolicBpLt130,
+  evaluateDiastolicBpLt80,
+  evaluateBmiLt30,
+  evaluateCreatinineLt1_3,
 };

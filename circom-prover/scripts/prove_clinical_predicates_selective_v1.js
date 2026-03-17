@@ -33,6 +33,11 @@ async function main() {
     "ldlX10",
     "fastingGlucoseX10",
     "triglyceridesX10",
+    "hdlX10",
+    "systolicBpX10",
+    "diastolicBpX10",
+    "bmiX10",
+    "creatinineX10",
     "nonce",
     "reqHiv",
     "reqHepB",
@@ -44,6 +49,11 @@ async function main() {
     "reqLdl",
     "reqFastingGlucose",
     "reqTriglycerides",
+    "reqHdl",
+    "reqSystolicBp",
+    "reqDiastolicBp",
+    "reqBmi",
+    "reqCreatinine",
   ];
 
   for (const k of required) {
@@ -66,6 +76,11 @@ async function main() {
     ldlX10: input.ldlX10,
     fastingGlucoseX10: input.fastingGlucoseX10,
     triglyceridesX10: input.triglyceridesX10,
+    hdlX10: input.hdlX10,
+    systolicBpX10: input.systolicBpX10,
+    diastolicBpX10: input.diastolicBpX10,
+    bmiX10: input.bmiX10,
+    creatinineX10: input.creatinineX10,
     nonce: nonceField,
     reqHiv: input.reqHiv,
     reqHepB: input.reqHepB,
@@ -77,6 +92,11 @@ async function main() {
     reqLdl: input.reqLdl,
     reqFastingGlucose: input.reqFastingGlucose,
     reqTriglycerides: input.reqTriglycerides,
+    reqHdl: input.reqHdl,
+    reqSystolicBp: input.reqSystolicBp,
+    reqDiastolicBp: input.reqDiastolicBp,
+    reqBmi: input.reqBmi,
+    reqCreatinine: input.reqCreatinine,
   };
 
   const base = path.join(

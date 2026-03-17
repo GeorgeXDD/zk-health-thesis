@@ -17,6 +17,11 @@ struct InputsJson {
     ldl_x10: u32,
     fasting_glucose_x10: u32,
     triglycerides_x10: u32,
+    hdl_x10: u32,
+    systolic_bp_x10: u32,
+    diastolic_bp_x10: u32,
+    bmi_x10: u32,
+    creatinine_x10: u32,
     nonce_field: String,
     req_hiv: u32,
     req_hepb: u32,
@@ -28,6 +33,11 @@ struct InputsJson {
     req_ldl: u32,
     req_fasting_glucose: u32,
     req_triglycerides: u32,
+    req_hdl: u32,
+    req_systolic_bp: u32,
+    req_diastolic_bp: u32,
+    req_bmi: u32,
+    req_creatinine: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -42,6 +52,11 @@ struct Inputs {
     ldl_x10: u32,
     fasting_glucose_x10: u32,
     triglycerides_x10: u32,
+    hdl_x10: u32,
+    systolic_bp_x10: u32,
+    diastolic_bp_x10: u32,
+    bmi_x10: u32,
+    creatinine_x10: u32,
     nonce_field: u128,
     req_hiv: u32,
     req_hepb: u32,
@@ -53,6 +68,11 @@ struct Inputs {
     req_ldl: u32,
     req_fasting_glucose: u32,
     req_triglycerides: u32,
+    req_hdl: u32,
+    req_systolic_bp: u32,
+    req_diastolic_bp: u32,
+    req_bmi: u32,
+    req_creatinine: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -67,6 +87,11 @@ struct Journal {
     out_ldl_ok: u32,
     out_fasting_glucose_ok: u32,
     out_triglycerides_ok: u32,
+    out_hdl_ok: u32,
+    out_systolic_bp_ok: u32,
+    out_diastolic_bp_ok: u32,
+    out_bmi_ok: u32,
+    out_creatinine_ok: u32,
     nonce_field: u128,
     req_hiv: u32,
     req_hepb: u32,
@@ -78,6 +103,11 @@ struct Journal {
     req_ldl: u32,
     req_fasting_glucose: u32,
     req_triglycerides: u32,
+    req_hdl: u32,
+    req_systolic_bp: u32,
+    req_diastolic_bp: u32,
+    req_bmi: u32,
+    req_creatinine: u32,
 }
 
 #[derive(Serialize)]
@@ -92,6 +122,11 @@ struct JournalOut {
     out_ldl_ok: u32,
     out_fasting_glucose_ok: u32,
     out_triglycerides_ok: u32,
+    out_hdl_ok: u32,
+    out_systolic_bp_ok: u32,
+    out_diastolic_bp_ok: u32,
+    out_bmi_ok: u32,
+    out_creatinine_ok: u32,
     nonce_field: String,
     req_hiv: u32,
     req_hepb: u32,
@@ -103,6 +138,11 @@ struct JournalOut {
     req_ldl: u32,
     req_fasting_glucose: u32,
     req_triglycerides: u32,
+    req_hdl: u32,
+    req_systolic_bp: u32,
+    req_diastolic_bp: u32,
+    req_bmi: u32,
+    req_creatinine: u32,
 }
 
 #[derive(Serialize)]
@@ -200,6 +240,11 @@ fn journal_to_out(j: &Journal) -> JournalOut {
         out_ldl_ok: j.out_ldl_ok,
         out_fasting_glucose_ok: j.out_fasting_glucose_ok,
         out_triglycerides_ok: j.out_triglycerides_ok,
+        out_hdl_ok: j.out_hdl_ok,
+        out_systolic_bp_ok: j.out_systolic_bp_ok,
+        out_diastolic_bp_ok: j.out_diastolic_bp_ok,
+        out_bmi_ok: j.out_bmi_ok,
+        out_creatinine_ok: j.out_creatinine_ok,
         nonce_field: j.nonce_field.to_string(),
         req_hiv: j.req_hiv,
         req_hepb: j.req_hepb,
@@ -211,6 +256,11 @@ fn journal_to_out(j: &Journal) -> JournalOut {
         req_ldl: j.req_ldl,
         req_fasting_glucose: j.req_fasting_glucose,
         req_triglycerides: j.req_triglycerides,
+        req_hdl: j.req_hdl,
+        req_systolic_bp: j.req_systolic_bp,
+        req_diastolic_bp: j.req_diastolic_bp,
+        req_bmi: j.req_bmi,
+        req_creatinine: j.req_creatinine,
     }
 }
 
@@ -231,6 +281,11 @@ fn handle_prove(in_path: &str, out_path: &str) {
         ldl_x10: raw.ldl_x10,
         fasting_glucose_x10: raw.fasting_glucose_x10,
         triglycerides_x10: raw.triglycerides_x10,
+        hdl_x10: raw.hdl_x10,
+        systolic_bp_x10: raw.systolic_bp_x10,
+        diastolic_bp_x10: raw.diastolic_bp_x10,
+        bmi_x10: raw.bmi_x10,
+        creatinine_x10: raw.creatinine_x10,
         nonce_field: parse_nonce(&raw.nonce_field),
         req_hiv: raw.req_hiv,
         req_hepb: raw.req_hepb,
@@ -242,6 +297,11 @@ fn handle_prove(in_path: &str, out_path: &str) {
         req_ldl: raw.req_ldl,
         req_fasting_glucose: raw.req_fasting_glucose,
         req_triglycerides: raw.req_triglycerides,
+        req_hdl: raw.req_hdl,
+        req_systolic_bp: raw.req_systolic_bp,
+        req_diastolic_bp: raw.req_diastolic_bp,
+        req_bmi: raw.req_bmi,
+        req_creatinine: raw.req_creatinine,
     };
 
     let exec_env = ExecutorEnv::builder()

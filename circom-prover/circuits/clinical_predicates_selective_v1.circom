@@ -15,6 +15,11 @@ template ClinicalPredicatesSelectiveV1() {
     signal input ldlX10;
     signal input fastingGlucoseX10;
     signal input triglyceridesX10;
+    signal input hdlX10;
+    signal input systolicBpX10;
+    signal input diastolicBpX10;
+    signal input bmiX10;
+    signal input creatinineX10;
 
     // -------- Public Inputs --------
     signal input nonce;
@@ -28,6 +33,11 @@ template ClinicalPredicatesSelectiveV1() {
     signal input reqLdl;
     signal input reqFastingGlucose;
     signal input reqTriglycerides;
+    signal input reqHdl;
+    signal input reqSystolicBp;
+    signal input reqDiastolicBp;
+    signal input reqBmi;
+    signal input reqCreatinine;
 
     // -------- Public Outputs --------
     signal output outHiv;
@@ -40,6 +50,11 @@ template ClinicalPredicatesSelectiveV1() {
     signal output outLdlOk;
     signal output outFastingGlucoseOk;
     signal output outTriglyceridesOk;
+    signal output outHdlOk;
+    signal output outSystolicBpOk;
+    signal output outDiastolicBpOk;
+    signal output outBmiOk;
+    signal output outCreatinineOk;
 
     reqHiv * (reqHiv - 1) === 0;
     reqHepB * (reqHepB - 1) === 0;
@@ -51,6 +66,11 @@ template ClinicalPredicatesSelectiveV1() {
     reqLdl * (reqLdl - 1) === 0;
     reqFastingGlucose * (reqFastingGlucose - 1) === 0;
     reqTriglycerides * (reqTriglycerides - 1) === 0;
+    reqHdl * (reqHdl - 1) === 0;
+    reqSystolicBp * (reqSystolicBp - 1) === 0;
+    reqDiastolicBp * (reqDiastolicBp - 1) === 0;
+    reqBmi * (reqBmi - 1) === 0;
+    reqCreatinine * (reqCreatinine - 1) === 0;
 
     hivStatus * (hivStatus - 1) === 0;
     signal isHivNegative;
@@ -147,8 +167,74 @@ template ClinicalPredicatesSelectiveV1() {
     outTriglyceridesOk <== reqTriglycerides * isTriglyceridesOk;
     reqTriglycerides * (outTriglyceridesOk - isTriglyceridesOk) === 0;
 
+    component hdlBits = Num2Bits(16);
+    hdlBits.in <== hdlX10;
+
+    // HDL_GT_40 means hdlX10 > 400
+    component gtHdl = LessThan(16);
+    gtHdl.in[0] <== 400;
+    gtHdl.in[1] <== hdlX10;
+
+    signal isHdlOk;
+    isHdlOk <== gtHdl.out;
+
+    outHdlOk <== reqHdl * isHdlOk;
+    reqHdl * (outHdlOk - isHdlOk) === 0;
+
+    component systolicBits = Num2Bits(16);
+    systolicBits.in <== systolicBpX10;
+
+    component ltSystolic = LessThan(16);
+    ltSystolic.in[0] <== systolicBpX10;
+    ltSystolic.in[1] <== 1300;
+
+    signal isSystolicBpOk;
+    isSystolicBpOk <== ltSystolic.out;
+
+    outSystolicBpOk <== reqSystolicBp * isSystolicBpOk;
+    reqSystolicBp * (outSystolicBpOk - isSystolicBpOk) === 0;
+
+    component diastolicBits = Num2Bits(16);
+    diastolicBits.in <== diastolicBpX10;
+
+    component ltDiastolic = LessThan(16);
+    ltDiastolic.in[0] <== diastolicBpX10;
+    ltDiastolic.in[1] <== 800;
+
+    signal isDiastolicBpOk;
+    isDiastolicBpOk <== ltDiastolic.out;
+
+    outDiastolicBpOk <== reqDiastolicBp * isDiastolicBpOk;
+    reqDiastolicBp * (outDiastolicBpOk - isDiastolicBpOk) === 0;
+
+    component bmiBits = Num2Bits(16);
+    bmiBits.in <== bmiX10;
+
+    component ltBmi = LessThan(16);
+    ltBmi.in[0] <== bmiX10;
+    ltBmi.in[1] <== 300;
+
+    signal isBmiOk;
+    isBmiOk <== ltBmi.out;
+
+    outBmiOk <== reqBmi * isBmiOk;
+    reqBmi * (outBmiOk - isBmiOk) === 0;
+
+    component creatinineBits = Num2Bits(16);
+    creatinineBits.in <== creatinineX10;
+
+    component ltCreatinine = LessThan(16);
+    ltCreatinine.in[0] <== creatinineX10;
+    ltCreatinine.in[1] <== 13;
+
+    signal isCreatinineOk;
+    isCreatinineOk <== ltCreatinine.out;
+
+    outCreatinineOk <== reqCreatinine * isCreatinineOk;
+    reqCreatinine * (outCreatinineOk - isCreatinineOk) === 0;
+
     signal dummy;
     dummy <== nonce * 1;
 }
 
-component main { public [nonce, reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c, reqTotalChol, reqLdl, reqFastingGlucose, reqTriglycerides] } = ClinicalPredicatesSelectiveV1();
+component main { public [nonce, reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c, reqTotalChol, reqLdl, reqFastingGlucose, reqTriglycerides, reqHdl, reqSystolicBp, reqDiastolicBp, reqBmi, reqCreatinine] } = ClinicalPredicatesSelectiveV1();

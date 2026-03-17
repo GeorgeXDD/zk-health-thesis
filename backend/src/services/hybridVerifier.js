@@ -14,6 +14,11 @@ function normalizeJournalShape(journal) {
     "out_ldl_ok",
     "out_fasting_glucose_ok",
     "out_triglycerides_ok",
+    "out_hdl_ok",
+    "out_systolic_bp_ok",
+    "out_diastolic_bp_ok",
+    "out_bmi_ok",
+    "out_creatinine_ok",
     "nonce_field",
     "req_hiv",
     "req_hepb",
@@ -25,6 +30,11 @@ function normalizeJournalShape(journal) {
     "req_ldl",
     "req_fasting_glucose",
     "req_triglycerides",
+    "req_hdl",
+    "req_systolic_bp",
+    "req_diastolic_bp",
+    "req_bmi",
+    "req_creatinine",
   ];
   for (const key of required) {
     if (j[key] === undefined || j[key] === null) {
@@ -42,6 +52,11 @@ function normalizeJournalShape(journal) {
     out_ldl_ok: Number(j.out_ldl_ok),
     out_fasting_glucose_ok: Number(j.out_fasting_glucose_ok),
     out_triglycerides_ok: Number(j.out_triglycerides_ok),
+    out_hdl_ok: Number(j.out_hdl_ok),
+    out_systolic_bp_ok: Number(j.out_systolic_bp_ok),
+    out_diastolic_bp_ok: Number(j.out_diastolic_bp_ok),
+    out_bmi_ok: Number(j.out_bmi_ok),
+    out_creatinine_ok: Number(j.out_creatinine_ok),
     nonce_field: String(j.nonce_field),
     req_hiv: Number(j.req_hiv),
     req_hepb: Number(j.req_hepb),
@@ -53,6 +68,11 @@ function normalizeJournalShape(journal) {
     req_ldl: Number(j.req_ldl),
     req_fasting_glucose: Number(j.req_fasting_glucose),
     req_triglycerides: Number(j.req_triglycerides),
+    req_hdl: Number(j.req_hdl),
+    req_systolic_bp: Number(j.req_systolic_bp),
+    req_diastolic_bp: Number(j.req_diastolic_bp),
+    req_bmi: Number(j.req_bmi),
+    req_creatinine: Number(j.req_creatinine),
   };
 }
 
@@ -70,6 +90,11 @@ function journalsEqual(a, b) {
     ja.out_ldl_ok === jb.out_ldl_ok &&
     ja.out_fasting_glucose_ok === jb.out_fasting_glucose_ok &&
     ja.out_triglycerides_ok === jb.out_triglycerides_ok &&
+    ja.out_hdl_ok === jb.out_hdl_ok &&
+    ja.out_systolic_bp_ok === jb.out_systolic_bp_ok &&
+    ja.out_diastolic_bp_ok === jb.out_diastolic_bp_ok &&
+    ja.out_bmi_ok === jb.out_bmi_ok &&
+    ja.out_creatinine_ok === jb.out_creatinine_ok &&
     ja.nonce_field === jb.nonce_field &&
     ja.req_hiv === jb.req_hiv &&
     ja.req_hepb === jb.req_hepb &&
@@ -80,7 +105,12 @@ function journalsEqual(a, b) {
     ja.req_total_chol === jb.req_total_chol &&
     ja.req_ldl === jb.req_ldl &&
     ja.req_fasting_glucose === jb.req_fasting_glucose &&
-    ja.req_triglycerides === jb.req_triglycerides
+    ja.req_triglycerides === jb.req_triglycerides &&
+    ja.req_hdl === jb.req_hdl &&
+    ja.req_systolic_bp === jb.req_systolic_bp &&
+    ja.req_diastolic_bp === jb.req_diastolic_bp &&
+    ja.req_bmi === jb.req_bmi &&
+    ja.req_creatinine === jb.req_creatinine
   );
 }
 

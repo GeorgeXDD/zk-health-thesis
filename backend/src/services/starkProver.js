@@ -46,6 +46,11 @@ async function proveStarkPredicates({
   ldlX10,
   fastingGlucoseX10,
   triglyceridesX10,
+  hdlX10,
+  systolicBpX10,
+  diastolicBpX10,
+  bmiX10,
+  creatinineX10,
   nonceField,
   reqHiv,
   reqHepB,
@@ -57,6 +62,11 @@ async function proveStarkPredicates({
   reqLdl,
   reqFastingGlucose,
   reqTriglycerides,
+  reqHdl,
+  reqSystolicBp,
+  reqDiastolicBp,
+  reqBmi,
+  reqCreatinine,
 }) {
   const tmpIn = path.join(
     os.tmpdir(),
@@ -78,6 +88,11 @@ async function proveStarkPredicates({
     ldl_x10: Number(ldlX10) >>> 0,
     fasting_glucose_x10: Number(fastingGlucoseX10) >>> 0,
     triglycerides_x10: Number(triglyceridesX10) >>> 0,
+    hdl_x10: Number(hdlX10) >>> 0,
+    systolic_bp_x10: Number(systolicBpX10) >>> 0,
+    diastolic_bp_x10: Number(diastolicBpX10) >>> 0,
+    bmi_x10: Number(bmiX10) >>> 0,
+    creatinine_x10: Number(creatinineX10) >>> 0,
     nonce_field: normalizeNonceField(nonceField),
     req_hiv: Number(reqHiv) >>> 0,
     req_hepb: Number(reqHepB) >>> 0,
@@ -89,6 +104,11 @@ async function proveStarkPredicates({
     req_ldl: Number(reqLdl) >>> 0,
     req_fasting_glucose: Number(reqFastingGlucose) >>> 0,
     req_triglycerides: Number(reqTriglycerides) >>> 0,
+    req_hdl: Number(reqHdl) >>> 0,
+    req_systolic_bp: Number(reqSystolicBp) >>> 0,
+    req_diastolic_bp: Number(reqDiastolicBp) >>> 0,
+    req_bmi: Number(reqBmi) >>> 0,
+    req_creatinine: Number(reqCreatinine) >>> 0,
   };
 
   fs.writeFileSync(tmpIn, JSON.stringify(input, null, 2));
