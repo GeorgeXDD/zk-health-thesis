@@ -13,6 +13,10 @@ struct InputsJson {
     covid_status_bit: u32,
     pregnancy_status_bit: u32,
     hba1c_x100: u32,
+    total_cholesterol_x10: u32,
+    ldl_x10: u32,
+    fasting_glucose_x10: u32,
+    triglycerides_x10: u32,
     nonce_field: String,
     req_hiv: u32,
     req_hepb: u32,
@@ -20,6 +24,10 @@ struct InputsJson {
     req_covid: u32,
     req_preg: u32,
     req_a1c: u32,
+    req_total_chol: u32,
+    req_ldl: u32,
+    req_fasting_glucose: u32,
+    req_triglycerides: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -30,6 +38,10 @@ struct Inputs {
     covid_status_bit: u32,
     pregnancy_status_bit: u32,
     hba1c_x100: u32,
+    total_cholesterol_x10: u32,
+    ldl_x10: u32,
+    fasting_glucose_x10: u32,
+    triglycerides_x10: u32,
     nonce_field: u128,
     req_hiv: u32,
     req_hepb: u32,
@@ -37,6 +49,10 @@ struct Inputs {
     req_covid: u32,
     req_preg: u32,
     req_a1c: u32,
+    req_total_chol: u32,
+    req_ldl: u32,
+    req_fasting_glucose: u32,
+    req_triglycerides: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -47,6 +63,10 @@ struct Journal {
     out_covid: u32,
     out_preg: u32,
     out_a1c_ok: u32,
+    out_total_chol_ok: u32,
+    out_ldl_ok: u32,
+    out_fasting_glucose_ok: u32,
+    out_triglycerides_ok: u32,
     nonce_field: u128,
     req_hiv: u32,
     req_hepb: u32,
@@ -54,6 +74,10 @@ struct Journal {
     req_covid: u32,
     req_preg: u32,
     req_a1c: u32,
+    req_total_chol: u32,
+    req_ldl: u32,
+    req_fasting_glucose: u32,
+    req_triglycerides: u32,
 }
 
 #[derive(Serialize)]
@@ -64,6 +88,10 @@ struct JournalOut {
     out_covid: u32,
     out_preg: u32,
     out_a1c_ok: u32,
+    out_total_chol_ok: u32,
+    out_ldl_ok: u32,
+    out_fasting_glucose_ok: u32,
+    out_triglycerides_ok: u32,
     nonce_field: String,
     req_hiv: u32,
     req_hepb: u32,
@@ -71,6 +99,10 @@ struct JournalOut {
     req_covid: u32,
     req_preg: u32,
     req_a1c: u32,
+    req_total_chol: u32,
+    req_ldl: u32,
+    req_fasting_glucose: u32,
+    req_triglycerides: u32,
 }
 
 #[derive(Serialize)]
@@ -164,6 +196,10 @@ fn journal_to_out(j: &Journal) -> JournalOut {
         out_covid: j.out_covid,
         out_preg: j.out_preg,
         out_a1c_ok: j.out_a1c_ok,
+        out_total_chol_ok: j.out_total_chol_ok,
+        out_ldl_ok: j.out_ldl_ok,
+        out_fasting_glucose_ok: j.out_fasting_glucose_ok,
+        out_triglycerides_ok: j.out_triglycerides_ok,
         nonce_field: j.nonce_field.to_string(),
         req_hiv: j.req_hiv,
         req_hepb: j.req_hepb,
@@ -171,6 +207,10 @@ fn journal_to_out(j: &Journal) -> JournalOut {
         req_covid: j.req_covid,
         req_preg: j.req_preg,
         req_a1c: j.req_a1c,
+        req_total_chol: j.req_total_chol,
+        req_ldl: j.req_ldl,
+        req_fasting_glucose: j.req_fasting_glucose,
+        req_triglycerides: j.req_triglycerides,
     }
 }
 
@@ -187,6 +227,10 @@ fn handle_prove(in_path: &str, out_path: &str) {
         covid_status_bit: raw.covid_status_bit,
         pregnancy_status_bit: raw.pregnancy_status_bit,
         hba1c_x100: raw.hba1c_x100,
+        total_cholesterol_x10: raw.total_cholesterol_x10,
+        ldl_x10: raw.ldl_x10,
+        fasting_glucose_x10: raw.fasting_glucose_x10,
+        triglycerides_x10: raw.triglycerides_x10,
         nonce_field: parse_nonce(&raw.nonce_field),
         req_hiv: raw.req_hiv,
         req_hepb: raw.req_hepb,
@@ -194,6 +238,10 @@ fn handle_prove(in_path: &str, out_path: &str) {
         req_covid: raw.req_covid,
         req_preg: raw.req_preg,
         req_a1c: raw.req_a1c,
+        req_total_chol: raw.req_total_chol,
+        req_ldl: raw.req_ldl,
+        req_fasting_glucose: raw.req_fasting_glucose,
+        req_triglycerides: raw.req_triglycerides,
     };
 
     let exec_env = ExecutorEnv::builder()

@@ -42,6 +42,10 @@ async function proveStarkPredicates({
   covidStatusBit,
   pregnancyStatusBit,
   hba1cX100,
+  totalCholesterolX10,
+  ldlX10,
+  fastingGlucoseX10,
+  triglyceridesX10,
   nonceField,
   reqHiv,
   reqHepB,
@@ -49,6 +53,10 @@ async function proveStarkPredicates({
   reqCovid,
   reqPreg,
   reqA1c,
+  reqTotalChol,
+  reqLdl,
+  reqFastingGlucose,
+  reqTriglycerides,
 }) {
   const tmpIn = path.join(
     os.tmpdir(),
@@ -66,6 +74,10 @@ async function proveStarkPredicates({
     covid_status_bit: Number(covidStatusBit) >>> 0,
     pregnancy_status_bit: Number(pregnancyStatusBit) >>> 0,
     hba1c_x100: Number(hba1cX100) >>> 0,
+    total_cholesterol_x10: Number(totalCholesterolX10) >>> 0,
+    ldl_x10: Number(ldlX10) >>> 0,
+    fasting_glucose_x10: Number(fastingGlucoseX10) >>> 0,
+    triglycerides_x10: Number(triglyceridesX10) >>> 0,
     nonce_field: normalizeNonceField(nonceField),
     req_hiv: Number(reqHiv) >>> 0,
     req_hepb: Number(reqHepB) >>> 0,
@@ -73,6 +85,10 @@ async function proveStarkPredicates({
     req_covid: Number(reqCovid) >>> 0,
     req_preg: Number(reqPreg) >>> 0,
     req_a1c: Number(reqA1c) >>> 0,
+    req_total_chol: Number(reqTotalChol) >>> 0,
+    req_ldl: Number(reqLdl) >>> 0,
+    req_fasting_glucose: Number(reqFastingGlucose) >>> 0,
+    req_triglycerides: Number(reqTriglycerides) >>> 0,
   };
 
   fs.writeFileSync(tmpIn, JSON.stringify(input, null, 2));

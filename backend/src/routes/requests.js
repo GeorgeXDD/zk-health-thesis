@@ -10,12 +10,20 @@ const {
   COVID_PREDICATE,
   PREGNANCY_PREDICATE,
   HBA1C_PREDICATE,
+  TOTAL_CHOLESTEROL_PREDICATE,
+  LDL_PREDICATE,
+  FASTING_GLUCOSE_PREDICATE,
+  TRIGLYCERIDES_PREDICATE,
   hivStatusBitFromObservation,
   hepBStatusBitFromObservation,
   hepCStatusBitFromObservation,
   covidStatusBitFromObservation,
   pregnancyStatusBitFromObservation,
   hba1cX100FromObservation,
+  totalCholesterolX10FromObservation,
+  ldlX10FromObservation,
+  fastingGlucoseX10FromObservation,
+  triglyceridesX10FromObservation,
 } = require("../services/predicates");
 
 const {
@@ -48,6 +56,10 @@ const ALLOWED_PREDICATES = new Set([
   COVID_PREDICATE,
   PREGNANCY_PREDICATE,
   HBA1C_PREDICATE,
+  TOTAL_CHOLESTEROL_PREDICATE,
+  LDL_PREDICATE,
+  FASTING_GLUCOSE_PREDICATE,
+  TRIGLYCERIDES_PREDICATE,
 ]);
 const ALLOWED_PROOF_SYSTEMS = new Set(["GROTH16", "STARK", "HYBRID", "FHIR"]);
 
@@ -68,7 +80,24 @@ function predicateSelectorsFrom(predicates) {
   const reqCovid = predicates.includes(COVID_PREDICATE) ? 1 : 0;
   const reqPreg = predicates.includes(PREGNANCY_PREDICATE) ? 1 : 0;
   const reqA1c = predicates.includes(HBA1C_PREDICATE) ? 1 : 0;
-  return { reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c };
+  const reqTotalChol = predicates.includes(TOTAL_CHOLESTEROL_PREDICATE) ? 1 : 0;
+  const reqLdl = predicates.includes(LDL_PREDICATE) ? 1 : 0;
+  const reqFastingGlucose = predicates.includes(FASTING_GLUCOSE_PREDICATE)
+    ? 1
+    : 0;
+  const reqTriglycerides = predicates.includes(TRIGLYCERIDES_PREDICATE) ? 1 : 0;
+  return {
+    reqHiv,
+    reqHepB,
+    reqHepC,
+    reqCovid,
+    reqPreg,
+    reqA1c,
+    reqTotalChol,
+    reqLdl,
+    reqFastingGlucose,
+    reqTriglycerides,
+  };
 }
 
 function filterDecodedForDoctor(predicates, decodedAll) {
@@ -86,6 +115,14 @@ function filterDecodedForDoctor(predicates, decodedAll) {
       filtered.outPreg = decodedAll.outPreg;
     if (predicates.includes(HBA1C_PREDICATE))
       filtered.outA1cOk = decodedAll.outA1cOk;
+    if (predicates.includes(TOTAL_CHOLESTEROL_PREDICATE))
+      filtered.outTotalCholOk = decodedAll.outTotalCholOk;
+    if (predicates.includes(LDL_PREDICATE))
+      filtered.outLdlOk = decodedAll.outLdlOk;
+    if (predicates.includes(FASTING_GLUCOSE_PREDICATE))
+      filtered.outFastingGlucoseOk = decodedAll.outFastingGlucoseOk;
+    if (predicates.includes(TRIGLYCERIDES_PREDICATE))
+      filtered.outTriglyceridesOk = decodedAll.outTriglyceridesOk;
   }
 
   if (decodedAll.nonceField !== undefined && decodedAll.nonceField !== null) {
@@ -104,6 +141,10 @@ function decodeFromHybridJournal(journal) {
     "out_covid",
     "out_preg",
     "out_a1c_ok",
+    "out_total_chol_ok",
+    "out_ldl_ok",
+    "out_fasting_glucose_ok",
+    "out_triglycerides_ok",
     "nonce_field",
     "req_hiv",
     "req_hepb",
@@ -111,6 +152,10 @@ function decodeFromHybridJournal(journal) {
     "req_covid",
     "req_preg",
     "req_a1c",
+    "req_total_chol",
+    "req_ldl",
+    "req_fasting_glucose",
+    "req_triglycerides",
   ];
   for (const key of required) {
     if (j[key] === undefined || j[key] === null) {
@@ -124,6 +169,10 @@ function decodeFromHybridJournal(journal) {
     outCovid: Number(j.out_covid),
     outPreg: Number(j.out_preg),
     outA1cOk: Number(j.out_a1c_ok),
+    outTotalCholOk: Number(j.out_total_chol_ok),
+    outLdlOk: Number(j.out_ldl_ok),
+    outFastingGlucoseOk: Number(j.out_fasting_glucose_ok),
+    outTriglyceridesOk: Number(j.out_triglycerides_ok),
     nonceField: String(j.nonce_field),
     reqHiv: Number(j.req_hiv),
     reqHepB: Number(j.req_hepb),
@@ -131,6 +180,10 @@ function decodeFromHybridJournal(journal) {
     reqCovid: Number(j.req_covid),
     reqPreg: Number(j.req_preg),
     reqA1c: Number(j.req_a1c),
+    reqTotalChol: Number(j.req_total_chol),
+    reqLdl: Number(j.req_ldl),
+    reqFastingGlucose: Number(j.req_fasting_glucose),
+    reqTriglycerides: Number(j.req_triglycerides),
   };
 }
 
@@ -142,13 +195,21 @@ function decodedShapeEquals(a, b) {
     String(a?.outCovid) === String(b?.outCovid) &&
     String(a?.outPreg) === String(b?.outPreg) &&
     String(a?.outA1cOk) === String(b?.outA1cOk) &&
+    String(a?.outTotalCholOk) === String(b?.outTotalCholOk) &&
+    String(a?.outLdlOk) === String(b?.outLdlOk) &&
+    String(a?.outFastingGlucoseOk) === String(b?.outFastingGlucoseOk) &&
+    String(a?.outTriglyceridesOk) === String(b?.outTriglyceridesOk) &&
     String(a?.nonceField) === String(b?.nonceField) &&
     String(a?.reqHiv) === String(b?.reqHiv) &&
     String(a?.reqHepB) === String(b?.reqHepB) &&
     String(a?.reqHepC) === String(b?.reqHepC) &&
     String(a?.reqCovid) === String(b?.reqCovid) &&
     String(a?.reqPreg) === String(b?.reqPreg) &&
-    String(a?.reqA1c) === String(b?.reqA1c)
+    String(a?.reqA1c) === String(b?.reqA1c) &&
+    String(a?.reqTotalChol) === String(b?.reqTotalChol) &&
+    String(a?.reqLdl) === String(b?.reqLdl) &&
+    String(a?.reqFastingGlucose) === String(b?.reqFastingGlucose) &&
+    String(a?.reqTriglycerides) === String(b?.reqTriglycerides)
   );
 }
 
@@ -340,15 +401,29 @@ router.post(
         });
       }
 
-      const { reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c } =
-        predicateSelectorsFrom(predicates);
+      const {
+        reqHiv,
+        reqHepB,
+        reqHepC,
+        reqCovid,
+        reqPreg,
+        reqA1c,
+        reqTotalChol,
+        reqLdl,
+        reqFastingGlucose,
+        reqTriglycerides,
+      } = predicateSelectorsFrom(predicates);
       if (
         reqHiv === 0 &&
         reqHepB === 0 &&
         reqHepC === 0 &&
         reqCovid === 0 &&
         reqPreg === 0 &&
-        reqA1c === 0
+        reqA1c === 0 &&
+        reqTotalChol === 0 &&
+        reqLdl === 0 &&
+        reqFastingGlucose === 0 &&
+        reqTriglycerides === 0
       ) {
         await client.query("ROLLBACK");
         return res
@@ -384,6 +459,14 @@ router.post(
       let pregHash = null;
       let a1cObs = null;
       let a1cHash = null;
+      let totalCholObs = null;
+      let totalCholHash = null;
+      let ldlObs = null;
+      let ldlHash = null;
+      let fastingGlucoseObs = null;
+      let fastingGlucoseHash = null;
+      let triglyceridesObs = null;
+      let triglyceridesHash = null;
 
       if (reqHiv) {
         const found = findLatestObservation(
@@ -475,6 +558,63 @@ router.post(
         }
       }
 
+      if (reqTotalChol) {
+        const found = findLatestObservation(
+          allObs.rows,
+          totalCholesterolX10FromObservation,
+        );
+        totalCholObs = found.obs;
+        totalCholHash = found.hash;
+        if (!totalCholObs) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            error: "No Total cholesterol Observation found for patient",
+          });
+        }
+      }
+
+      if (reqLdl) {
+        const found = findLatestObservation(allObs.rows, ldlX10FromObservation);
+        ldlObs = found.obs;
+        ldlHash = found.hash;
+        if (!ldlObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No LDL Observation found for patient" });
+        }
+      }
+
+      if (reqFastingGlucose) {
+        const found = findLatestObservation(
+          allObs.rows,
+          fastingGlucoseX10FromObservation,
+        );
+        fastingGlucoseObs = found.obs;
+        fastingGlucoseHash = found.hash;
+        if (!fastingGlucoseObs) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            error: "No Fasting glucose Observation found for patient",
+          });
+        }
+      }
+
+      if (reqTriglycerides) {
+        const found = findLatestObservation(
+          allObs.rows,
+          triglyceridesX10FromObservation,
+        );
+        triglyceridesObs = found.obs;
+        triglyceridesHash = found.hash;
+        if (!triglyceridesObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No Triglycerides Observation found for patient" });
+        }
+      }
+
       const hivStatus = reqHiv ? hivStatusBitFromObservation(hivObs) : 0;
       const hepBStatus = reqHepB ? hepBStatusBitFromObservation(hepBObs) : 0;
       const hepCStatus = reqHepC ? hepCStatusBitFromObservation(hepCObs) : 0;
@@ -485,6 +625,16 @@ router.post(
         ? pregnancyStatusBitFromObservation(pregObs)
         : 0;
       const hba1cX100 = reqA1c ? hba1cX100FromObservation(a1cObs) : 0;
+      const totalCholesterolX10 = reqTotalChol
+        ? totalCholesterolX10FromObservation(totalCholObs)
+        : 0;
+      const ldlX10 = reqLdl ? ldlX10FromObservation(ldlObs) : 0;
+      const fastingGlucoseX10 = reqFastingGlucose
+        ? fastingGlucoseX10FromObservation(fastingGlucoseObs)
+        : 0;
+      const triglyceridesX10 = reqTriglycerides
+        ? triglyceridesX10FromObservation(triglyceridesObs)
+        : 0;
 
       const proofSystem = normalizeProofSystem(
         request.proof_system || "GROTH16",
@@ -510,6 +660,10 @@ router.post(
           covidStatus,
           pregnancyStatus,
           hba1cX100,
+          totalCholesterolX10,
+          ldlX10,
+          fastingGlucoseX10,
+          triglyceridesX10,
           nonce: request.nonce,
           reqHiv,
           reqHepB,
@@ -517,13 +671,19 @@ router.post(
           reqCovid,
           reqPreg,
           reqA1c,
+          reqTotalChol,
+          reqLdl,
+          reqFastingGlucose,
+          reqTriglycerides,
         });
 
         // publicSignals layout:
-        // [outHiv, outHepB, outHepC, outCovid, outPreg, outA1cOk, nonceField,
-        //  reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c]
+        // [outHiv, outHepB, outHepC, outCovid, outPreg, outA1cOk,
+        //  outTotalCholOk, outLdlOk, outFastingGlucoseOk, outTriglyceridesOk,
+        //  nonceField, reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c,
+        //  reqTotalChol, reqLdl, reqFastingGlucose, reqTriglycerides]
         const publicSignals = proverOut.publicSignals || [];
-        if (!Array.isArray(publicSignals) || publicSignals.length < 13) {
+        if (!Array.isArray(publicSignals) || publicSignals.length < 21) {
           throw new Error("Unexpected publicSignals returned by Groth prover");
         }
 
@@ -533,6 +693,10 @@ router.post(
         const outCovid = Number(publicSignals[3]);
         const outPreg = Number(publicSignals[4]);
         const outA1cOk = Number(publicSignals[5]);
+        const outTotalCholOk = Number(publicSignals[6]);
+        const outLdlOk = Number(publicSignals[7]);
+        const outFastingGlucoseOk = Number(publicSignals[8]);
+        const outTriglyceridesOk = Number(publicSignals[9]);
 
         decoded = {
           outHiv,
@@ -541,13 +705,21 @@ router.post(
           outCovid,
           outPreg,
           outA1cOk,
-          nonceField: String(publicSignals[6]),
-          reqHiv: Number(publicSignals[7]),
-          reqHepB: Number(publicSignals[8]),
-          reqHepC: Number(publicSignals[9]),
-          reqCovid: Number(publicSignals[10]),
-          reqPreg: Number(publicSignals[11]),
-          reqA1c: Number(publicSignals[12]),
+          outTotalCholOk,
+          outLdlOk,
+          outFastingGlucoseOk,
+          outTriglyceridesOk,
+          nonceField: String(publicSignals[10]),
+          reqHiv: Number(publicSignals[11]),
+          reqHepB: Number(publicSignals[12]),
+          reqHepC: Number(publicSignals[13]),
+          reqCovid: Number(publicSignals[14]),
+          reqPreg: Number(publicSignals[15]),
+          reqA1c: Number(publicSignals[16]),
+          reqTotalChol: Number(publicSignals[17]),
+          reqLdl: Number(publicSignals[18]),
+          reqFastingGlucose: Number(publicSignals[19]),
+          reqTriglycerides: Number(publicSignals[20]),
         };
 
         predicatesResult = {};
@@ -557,6 +729,13 @@ router.post(
         if (reqCovid) predicatesResult.isCovidNegative = outCovid === 1;
         if (reqPreg) predicatesResult.isPregnancyNegative = outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = outA1cOk === 1;
+        if (reqTotalChol)
+          predicatesResult.isTotalCholesterolLt200 = outTotalCholOk === 1;
+        if (reqLdl) predicatesResult.isLdlLt130 = outLdlOk === 1;
+        if (reqFastingGlucose)
+          predicatesResult.isFastingGlucoseLt100 = outFastingGlucoseOk === 1;
+        if (reqTriglycerides)
+          predicatesResult.isTriglyceridesLt150 = outTriglyceridesOk === 1;
 
         proofTypeToStore = "GROTH16";
         proofToStore = proverOut.proof;
@@ -571,6 +750,10 @@ router.post(
             covid: covidHash || null,
             pregnancy: pregHash || null,
             hba1c: a1cHash || null,
+            total_cholesterol: totalCholHash || null,
+            ldl: ldlHash || null,
+            fasting_glucose: fastingGlucoseHash || null,
+            triglycerides: triglyceridesHash || null,
           },
         };
 
@@ -586,6 +769,10 @@ router.post(
           covidStatusBit: covidStatus,
           pregnancyStatusBit: pregnancyStatus,
           hba1cX100: hba1cX100,
+          totalCholesterolX10,
+          ldlX10,
+          fastingGlucoseX10,
+          triglyceridesX10,
           nonceField: request.nonce,
           reqHiv,
           reqHepB,
@@ -593,6 +780,10 @@ router.post(
           reqCovid,
           reqPreg,
           reqA1c,
+          reqTotalChol,
+          reqLdl,
+          reqFastingGlucose,
+          reqTriglycerides,
         });
 
         const j = starkOut.journal || {};
@@ -606,6 +797,10 @@ router.post(
           outCovid: Number(j.out_covid ?? 0),
           outPreg: Number(j.out_preg ?? 0),
           outA1cOk: Number(j.out_a1c_ok ?? 0),
+          outTotalCholOk: Number(j.out_total_chol_ok ?? 0),
+          outLdlOk: Number(j.out_ldl_ok ?? 0),
+          outFastingGlucoseOk: Number(j.out_fasting_glucose_ok ?? 0),
+          outTriglyceridesOk: Number(j.out_triglycerides_ok ?? 0),
           nonceField: nonceFieldDec,
           reqHiv: Number(j.req_hiv ?? reqHiv),
           reqHepB: Number(j.req_hepb ?? reqHepB),
@@ -613,6 +808,10 @@ router.post(
           reqCovid: Number(j.req_covid ?? reqCovid),
           reqPreg: Number(j.req_preg ?? reqPreg),
           reqA1c: Number(j.req_a1c ?? reqA1c),
+          reqTotalChol: Number(j.req_total_chol ?? reqTotalChol),
+          reqLdl: Number(j.req_ldl ?? reqLdl),
+          reqFastingGlucose: Number(j.req_fasting_glucose ?? reqFastingGlucose),
+          reqTriglycerides: Number(j.req_triglycerides ?? reqTriglycerides),
         };
 
         predicatesResult = {};
@@ -623,6 +822,16 @@ router.post(
         if (reqPreg)
           predicatesResult.isPregnancyNegative = decoded.outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = decoded.outA1cOk === 1;
+        if (reqTotalChol)
+          predicatesResult.isTotalCholesterolLt200 =
+            decoded.outTotalCholOk === 1;
+        if (reqLdl) predicatesResult.isLdlLt130 = decoded.outLdlOk === 1;
+        if (reqFastingGlucose)
+          predicatesResult.isFastingGlucoseLt100 =
+            decoded.outFastingGlucoseOk === 1;
+        if (reqTriglycerides)
+          predicatesResult.isTriglyceridesLt150 =
+            decoded.outTriglyceridesOk === 1;
 
         proofTypeToStore = "STARK";
 
@@ -638,6 +847,10 @@ router.post(
             covid: covidHash || null,
             pregnancy: pregHash || null,
             hba1c: a1cHash || null,
+            total_cholesterol: totalCholHash || null,
+            ldl: ldlHash || null,
+            fasting_glucose: fastingGlucoseHash || null,
+            triglycerides: triglyceridesHash || null,
           },
         };
 
@@ -653,6 +866,10 @@ router.post(
           covidStatusBit: covidStatus,
           pregnancyStatusBit: pregnancyStatus,
           hba1cX100: hba1cX100,
+          totalCholesterolX10,
+          ldlX10,
+          fastingGlucoseX10,
+          triglyceridesX10,
           nonceField: request.nonce,
           reqHiv,
           reqHepB,
@@ -660,6 +877,10 @@ router.post(
           reqCovid,
           reqPreg,
           reqA1c,
+          reqTotalChol,
+          reqLdl,
+          reqFastingGlucose,
+          reqTriglycerides,
         });
 
         if (
@@ -692,6 +913,16 @@ router.post(
         if (reqPreg)
           predicatesResult.isPregnancyNegative = decoded.outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = decoded.outA1cOk === 1;
+        if (reqTotalChol)
+          predicatesResult.isTotalCholesterolLt200 =
+            decoded.outTotalCholOk === 1;
+        if (reqLdl) predicatesResult.isLdlLt130 = decoded.outLdlOk === 1;
+        if (reqFastingGlucose)
+          predicatesResult.isFastingGlucoseLt100 =
+            decoded.outFastingGlucoseOk === 1;
+        if (reqTriglycerides)
+          predicatesResult.isTriglyceridesLt150 =
+            decoded.outTriglyceridesOk === 1;
 
         proofTypeToStore = "HYBRID";
         proofToStore = {
@@ -709,6 +940,10 @@ router.post(
             covid: covidHash || null,
             pregnancy: pregHash || null,
             hba1c: a1cHash || null,
+            total_cholesterol: totalCholHash || null,
+            ldl: ldlHash || null,
+            fasting_glucose: fastingGlucoseHash || null,
+            triglycerides: triglyceridesHash || null,
           },
           hybrid: {
             mode: "HYBRID",
@@ -734,6 +969,22 @@ router.post(
         const outCovid = reqCovid ? (covidStatus === 0 ? 1 : 0) : 0;
         const outPreg = reqPreg ? (pregnancyStatus === 0 ? 1 : 0) : 0;
         const outA1cOk = reqA1c ? (hba1cX100 < 650 ? 1 : 0) : 0;
+        const outTotalCholOk = reqTotalChol
+          ? totalCholesterolX10 < 2000
+            ? 1
+            : 0
+          : 0;
+        const outLdlOk = reqLdl ? (ldlX10 < 1300 ? 1 : 0) : 0;
+        const outFastingGlucoseOk = reqFastingGlucose
+          ? fastingGlucoseX10 < 1000
+            ? 1
+            : 0
+          : 0;
+        const outTriglyceridesOk = reqTriglycerides
+          ? triglyceridesX10 < 1500
+            ? 1
+            : 0
+          : 0;
 
         decoded = {
           outHiv,
@@ -742,6 +993,10 @@ router.post(
           outCovid,
           outPreg,
           outA1cOk,
+          outTotalCholOk,
+          outLdlOk,
+          outFastingGlucoseOk,
+          outTriglyceridesOk,
           nonceField: nonceFieldDec,
           reqHiv,
           reqHepB,
@@ -749,6 +1004,10 @@ router.post(
           reqCovid,
           reqPreg,
           reqA1c,
+          reqTotalChol,
+          reqLdl,
+          reqFastingGlucose,
+          reqTriglycerides,
         };
 
         predicatesResult = {};
@@ -758,6 +1017,13 @@ router.post(
         if (reqCovid) predicatesResult.isCovidNegative = outCovid === 1;
         if (reqPreg) predicatesResult.isPregnancyNegative = outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = outA1cOk === 1;
+        if (reqTotalChol)
+          predicatesResult.isTotalCholesterolLt200 = outTotalCholOk === 1;
+        if (reqLdl) predicatesResult.isLdlLt130 = outLdlOk === 1;
+        if (reqFastingGlucose)
+          predicatesResult.isFastingGlucoseLt100 = outFastingGlucoseOk === 1;
+        if (reqTriglycerides)
+          predicatesResult.isTriglyceridesLt150 = outTriglyceridesOk === 1;
 
         proofTypeToStore = "FHIR";
 
@@ -773,6 +1039,10 @@ router.post(
             covid: covidHash || null,
             pregnancy: pregHash || null,
             hba1c: a1cHash || null,
+            total_cholesterol: totalCholHash || null,
+            ldl: ldlHash || null,
+            fasting_glucose: fastingGlucoseHash || null,
+            triglycerides: triglyceridesHash || null,
           },
           baseline: { kind: "FHIR_ONLY" },
         };
@@ -1039,8 +1309,18 @@ router.post(
       const nonce = rq2.rows[0].nonce;
       const predicates = rq2.rows[0].predicates || [];
 
-      const { reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c } =
-        predicateSelectorsFrom(predicates);
+      const {
+        reqHiv,
+        reqHepB,
+        reqHepC,
+        reqCovid,
+        reqPreg,
+        reqA1c,
+        reqTotalChol,
+        reqLdl,
+        reqFastingGlucose,
+        reqTriglycerides,
+      } = predicateSelectorsFrom(predicates);
 
       const allObs = await pool.query(
         `SELECT resource_hash, resource
@@ -1057,6 +1337,10 @@ router.post(
       let covidObs = null;
       let pregObs = null;
       let a1cObs = null;
+      let totalCholObs = null;
+      let ldlObs = null;
+      let fastingGlucoseObs = null;
+      let triglyceridesObs = null;
 
       if (reqHiv) {
         hivObs = findLatestObservation(
@@ -1124,6 +1408,51 @@ router.post(
             .json({ error: "No HbA1c Observation found for patient" });
       }
 
+      if (reqTotalChol) {
+        totalCholObs = findLatestObservation(
+          allObs.rows,
+          totalCholesterolX10FromObservation,
+        ).obs;
+        if (!totalCholObs)
+          return res
+            .status(400)
+            .json({
+              error: "No Total cholesterol Observation found for patient",
+            });
+      }
+
+      if (reqLdl) {
+        ldlObs = findLatestObservation(allObs.rows, ldlX10FromObservation).obs;
+        if (!ldlObs)
+          return res
+            .status(400)
+            .json({ error: "No LDL Observation found for patient" });
+      }
+
+      if (reqFastingGlucose) {
+        fastingGlucoseObs = findLatestObservation(
+          allObs.rows,
+          fastingGlucoseX10FromObservation,
+        ).obs;
+        if (!fastingGlucoseObs)
+          return res
+            .status(400)
+            .json({
+              error: "No Fasting glucose Observation found for patient",
+            });
+      }
+
+      if (reqTriglycerides) {
+        triglyceridesObs = findLatestObservation(
+          allObs.rows,
+          triglyceridesX10FromObservation,
+        ).obs;
+        if (!triglyceridesObs)
+          return res
+            .status(400)
+            .json({ error: "No Triglycerides Observation found for patient" });
+      }
+
       const hivStatus = reqHiv ? hivStatusBitFromObservation(hivObs) : 0;
       const hepBStatus = reqHepB ? hepBStatusBitFromObservation(hepBObs) : 0;
       const hepCStatus = reqHepC ? hepCStatusBitFromObservation(hepCObs) : 0;
@@ -1134,6 +1463,16 @@ router.post(
         ? pregnancyStatusBitFromObservation(pregObs)
         : 0;
       const hba1cX100 = reqA1c ? hba1cX100FromObservation(a1cObs) : 0;
+      const totalCholesterolX10 = reqTotalChol
+        ? totalCholesterolX10FromObservation(totalCholObs)
+        : 0;
+      const ldlX10 = reqLdl ? ldlX10FromObservation(ldlObs) : 0;
+      const fastingGlucoseX10 = reqFastingGlucose
+        ? fastingGlucoseX10FromObservation(fastingGlucoseObs)
+        : 0;
+      const triglyceridesX10 = reqTriglycerides
+        ? triglyceridesX10FromObservation(triglyceridesObs)
+        : 0;
 
       const nonceFieldDec = BigInt("0x" + nonce).toString();
 
@@ -1144,6 +1483,18 @@ router.post(
         outCovid: reqCovid ? (covidStatus === 0 ? 1 : 0) : 0,
         outPreg: reqPreg ? (pregStatus === 0 ? 1 : 0) : 0,
         outA1cOk: reqA1c ? (hba1cX100 < 650 ? 1 : 0) : 0,
+        outTotalCholOk: reqTotalChol ? (totalCholesterolX10 < 2000 ? 1 : 0) : 0,
+        outLdlOk: reqLdl ? (ldlX10 < 1300 ? 1 : 0) : 0,
+        outFastingGlucoseOk: reqFastingGlucose
+          ? fastingGlucoseX10 < 1000
+            ? 1
+            : 0
+          : 0,
+        outTriglyceridesOk: reqTriglycerides
+          ? triglyceridesX10 < 1500
+            ? 1
+            : 0
+          : 0,
         nonceField: nonceFieldDec,
         reqHiv,
         reqHepB,
@@ -1151,6 +1502,10 @@ router.post(
         reqCovid,
         reqPreg,
         reqA1c,
+        reqTotalChol,
+        reqLdl,
+        reqFastingGlucose,
+        reqTriglycerides,
       };
 
       // Verify = stored decoded equals recomputed decoded

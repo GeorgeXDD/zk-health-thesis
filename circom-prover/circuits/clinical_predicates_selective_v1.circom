@@ -11,6 +11,10 @@ template ClinicalPredicatesSelectiveV1() {
     signal input covidStatus;
     signal input pregnancyStatus;
     signal input hba1cX100;
+    signal input totalCholesterolX10;
+    signal input ldlX10;
+    signal input fastingGlucoseX10;
+    signal input triglyceridesX10;
 
     // -------- Public Inputs --------
     signal input nonce;
@@ -20,6 +24,10 @@ template ClinicalPredicatesSelectiveV1() {
     signal input reqCovid;
     signal input reqPreg;
     signal input reqA1c;
+    signal input reqTotalChol;
+    signal input reqLdl;
+    signal input reqFastingGlucose;
+    signal input reqTriglycerides;
 
     // -------- Public Outputs --------
     signal output outHiv;
@@ -28,6 +36,10 @@ template ClinicalPredicatesSelectiveV1() {
     signal output outCovid;
     signal output outPreg;
     signal output outA1cOk;
+    signal output outTotalCholOk;
+    signal output outLdlOk;
+    signal output outFastingGlucoseOk;
+    signal output outTriglyceridesOk;
 
     reqHiv * (reqHiv - 1) === 0;
     reqHepB * (reqHepB - 1) === 0;
@@ -35,6 +47,10 @@ template ClinicalPredicatesSelectiveV1() {
     reqCovid * (reqCovid - 1) === 0;
     reqPreg * (reqPreg - 1) === 0;
     reqA1c * (reqA1c - 1) === 0;
+    reqTotalChol * (reqTotalChol - 1) === 0;
+    reqLdl * (reqLdl - 1) === 0;
+    reqFastingGlucose * (reqFastingGlucose - 1) === 0;
+    reqTriglycerides * (reqTriglycerides - 1) === 0;
 
     hivStatus * (hivStatus - 1) === 0;
     signal isHivNegative;
@@ -79,8 +95,60 @@ template ClinicalPredicatesSelectiveV1() {
     outA1cOk <== reqA1c * isA1cOk;
     reqA1c * (outA1cOk - isA1cOk) === 0;
 
+    component totalCholBits = Num2Bits(16);
+    totalCholBits.in <== totalCholesterolX10;
+
+    component ltTotalChol = LessThan(16);
+    ltTotalChol.in[0] <== totalCholesterolX10;
+    ltTotalChol.in[1] <== 2000;
+
+    signal isTotalCholOk;
+    isTotalCholOk <== ltTotalChol.out;
+
+    outTotalCholOk <== reqTotalChol * isTotalCholOk;
+    reqTotalChol * (outTotalCholOk - isTotalCholOk) === 0;
+
+    component ldlBits = Num2Bits(16);
+    ldlBits.in <== ldlX10;
+
+    component ltLdl = LessThan(16);
+    ltLdl.in[0] <== ldlX10;
+    ltLdl.in[1] <== 1300;
+
+    signal isLdlOk;
+    isLdlOk <== ltLdl.out;
+
+    outLdlOk <== reqLdl * isLdlOk;
+    reqLdl * (outLdlOk - isLdlOk) === 0;
+
+    component fastingGlucoseBits = Num2Bits(16);
+    fastingGlucoseBits.in <== fastingGlucoseX10;
+
+    component ltFastingGlucose = LessThan(16);
+    ltFastingGlucose.in[0] <== fastingGlucoseX10;
+    ltFastingGlucose.in[1] <== 1000;
+
+    signal isFastingGlucoseOk;
+    isFastingGlucoseOk <== ltFastingGlucose.out;
+
+    outFastingGlucoseOk <== reqFastingGlucose * isFastingGlucoseOk;
+    reqFastingGlucose * (outFastingGlucoseOk - isFastingGlucoseOk) === 0;
+
+    component triglyceridesBits = Num2Bits(16);
+    triglyceridesBits.in <== triglyceridesX10;
+
+    component ltTriglycerides = LessThan(16);
+    ltTriglycerides.in[0] <== triglyceridesX10;
+    ltTriglycerides.in[1] <== 1500;
+
+    signal isTriglyceridesOk;
+    isTriglyceridesOk <== ltTriglycerides.out;
+
+    outTriglyceridesOk <== reqTriglycerides * isTriglyceridesOk;
+    reqTriglycerides * (outTriglyceridesOk - isTriglyceridesOk) === 0;
+
     signal dummy;
     dummy <== nonce * 1;
 }
 
-component main { public [nonce, reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c] } = ClinicalPredicatesSelectiveV1();
+component main { public [nonce, reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c, reqTotalChol, reqLdl, reqFastingGlucose, reqTriglycerides] } = ClinicalPredicatesSelectiveV1();

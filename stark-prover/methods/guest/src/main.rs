@@ -12,6 +12,10 @@ struct Inputs {
     covid_status_bit: u32,
     pregnancy_status_bit: u32,
     hba1c_x100: u32,     // 580 for 5.80%
+    total_cholesterol_x10: u32,
+    ldl_x10: u32,
+    fasting_glucose_x10: u32,
+    triglycerides_x10: u32,
     nonce_field: u128,
     req_hiv: u32, // 0/1
     req_hepb: u32,
@@ -19,6 +23,10 @@ struct Inputs {
     req_covid: u32,
     req_preg: u32,
     req_a1c: u32, // 0/1
+    req_total_chol: u32,
+    req_ldl: u32,
+    req_fasting_glucose: u32,
+    req_triglycerides: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -29,6 +37,10 @@ struct Journal {
     out_covid: u32,
     out_preg: u32,
     out_a1c_ok: u32,  // 0/1
+    out_total_chol_ok: u32,
+    out_ldl_ok: u32,
+    out_fasting_glucose_ok: u32,
+    out_triglycerides_ok: u32,
     nonce_field: u128,
     req_hiv: u32,
     req_hepb: u32,
@@ -36,6 +48,10 @@ struct Journal {
     req_covid: u32,
     req_preg: u32,
     req_a1c: u32,
+    req_total_chol: u32,
+    req_ldl: u32,
+    req_fasting_glucose: u32,
+    req_triglycerides: u32,
 }
 
 fn main() {
@@ -59,6 +75,18 @@ fn main() {
     let a1c_ok = if inp.hba1c_x100 < 650 { 1u32 } else { 0u32 };
     let out_a1c_ok = inp.req_a1c * a1c_ok;
 
+    let total_chol_ok = if inp.total_cholesterol_x10 < 2000 { 1u32 } else { 0u32 };
+    let out_total_chol_ok = inp.req_total_chol * total_chol_ok;
+
+    let ldl_ok = if inp.ldl_x10 < 1300 { 1u32 } else { 0u32 };
+    let out_ldl_ok = inp.req_ldl * ldl_ok;
+
+    let fasting_glucose_ok = if inp.fasting_glucose_x10 < 1000 { 1u32 } else { 0u32 };
+    let out_fasting_glucose_ok = inp.req_fasting_glucose * fasting_glucose_ok;
+
+    let triglycerides_ok = if inp.triglycerides_x10 < 1500 { 1u32 } else { 0u32 };
+    let out_triglycerides_ok = inp.req_triglycerides * triglycerides_ok;
+
     let journal = Journal {
         out_hiv,
         out_hepb,
@@ -66,6 +94,10 @@ fn main() {
         out_covid,
         out_preg,
         out_a1c_ok,
+        out_total_chol_ok,
+        out_ldl_ok,
+        out_fasting_glucose_ok,
+        out_triglycerides_ok,
         nonce_field: inp.nonce_field,
         req_hiv: inp.req_hiv,
         req_hepb: inp.req_hepb,
@@ -73,6 +105,10 @@ fn main() {
         req_covid: inp.req_covid,
         req_preg: inp.req_preg,
         req_a1c: inp.req_a1c,
+        req_total_chol: inp.req_total_chol,
+        req_ldl: inp.req_ldl,
+        req_fasting_glucose: inp.req_fasting_glucose,
+        req_triglycerides: inp.req_triglycerides,
     };
 
     env::commit(&journal);

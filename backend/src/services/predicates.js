@@ -4,12 +4,20 @@ const HEPC_PREDICATE = "HEPC_NEGATIVE";
 const COVID_PREDICATE = "COVID_NEGATIVE";
 const PREGNANCY_PREDICATE = "PREGNANCY_NEGATIVE";
 const HBA1C_PREDICATE = "HBA1C_LT_6_5";
+const TOTAL_CHOLESTEROL_PREDICATE = "TOTAL_CHOLESTEROL_LT_200";
+const LDL_PREDICATE = "LDL_LT_130";
+const FASTING_GLUCOSE_PREDICATE = "FASTING_GLUCOSE_LT_100";
+const TRIGLYCERIDES_PREDICATE = "TRIGLYCERIDES_LT_150";
 
 const HIV_LOINC_CODES = new Set(["56888-1"]);
 const HEPB_LOINC_CODES = new Set(["5196-1"]);
 const HEPC_LOINC_CODES = new Set(["13955-0"]);
 const COVID_LOINC_CODES = new Set(["94500-6"]);
 const PREGNANCY_LOINC_CODES = new Set(["2106-3"]);
+const TOTAL_CHOLESTEROL_LOINC_CODES = new Set(["2093-3"]);
+const LDL_LOINC_CODES = new Set(["13457-7"]);
+const FASTING_GLUCOSE_LOINC_CODES = new Set(["1558-6"]);
+const TRIGLYCERIDES_LOINC_CODES = new Set(["2571-8"]);
 const SNOMED_NEGATIVE = "260385009";
 
 function getObservationCode(obs) {
@@ -142,6 +150,82 @@ function evaluateHba1cLt6_5(observation) {
   return x100 < 650;
 }
 
+function mgDlX10FromObservation(observation, allowedLoincCodes, label) {
+  const loinc = getObservationCode(observation);
+  if (!loinc || !allowedLoincCodes.has(loinc)) {
+    throw new Error(
+      `No matching ${label} Observation found (code=${loinc || "null"})`,
+    );
+  }
+
+  const vq = observation?.valueQuantity;
+  const value = vq?.value;
+
+  if (value === undefined || value === null || typeof value !== "number") {
+    throw new Error(
+      `${label} Observation.valueQuantity.value must be a number`,
+    );
+  }
+
+  const unit = (vq?.code || vq?.unit || "").toString().trim().toLowerCase();
+  if (unit && unit !== "mg/dl") {
+    throw new Error(
+      `${label} unit must be 'mg/dL' (got '${vq?.code || vq?.unit || ""}')`,
+    );
+  }
+
+  const x10 = Math.round(value * 10);
+  if (x10 < 0 || x10 > 10000) {
+    throw new Error(`${label} value out of bounds: ${value}`);
+  }
+
+  return x10;
+}
+
+function totalCholesterolX10FromObservation(observation) {
+  return mgDlX10FromObservation(
+    observation,
+    TOTAL_CHOLESTEROL_LOINC_CODES,
+    "Total cholesterol",
+  );
+}
+
+function ldlX10FromObservation(observation) {
+  return mgDlX10FromObservation(observation, LDL_LOINC_CODES, "LDL");
+}
+
+function fastingGlucoseX10FromObservation(observation) {
+  return mgDlX10FromObservation(
+    observation,
+    FASTING_GLUCOSE_LOINC_CODES,
+    "Fasting glucose",
+  );
+}
+
+function triglyceridesX10FromObservation(observation) {
+  return mgDlX10FromObservation(
+    observation,
+    TRIGLYCERIDES_LOINC_CODES,
+    "Triglycerides",
+  );
+}
+
+function evaluateTotalCholesterolLt200(observation) {
+  return totalCholesterolX10FromObservation(observation) < 2000;
+}
+
+function evaluateLdlLt130(observation) {
+  return ldlX10FromObservation(observation) < 1300;
+}
+
+function evaluateFastingGlucoseLt100(observation) {
+  return fastingGlucoseX10FromObservation(observation) < 1000;
+}
+
+function evaluateTriglyceridesLt150(observation) {
+  return triglyceridesX10FromObservation(observation) < 1500;
+}
+
 module.exports = {
   HIV_PREDICATE,
   HEPB_PREDICATE,
@@ -149,6 +233,10 @@ module.exports = {
   COVID_PREDICATE,
   PREGNANCY_PREDICATE,
   HBA1C_PREDICATE,
+  TOTAL_CHOLESTEROL_PREDICATE,
+  LDL_PREDICATE,
+  FASTING_GLUCOSE_PREDICATE,
+  TRIGLYCERIDES_PREDICATE,
 
   evaluateHivNegative,
   hivStatusBitFromObservation,
@@ -163,4 +251,12 @@ module.exports = {
 
   hba1cX100FromObservation,
   evaluateHba1cLt6_5,
+  totalCholesterolX10FromObservation,
+  ldlX10FromObservation,
+  fastingGlucoseX10FromObservation,
+  triglyceridesX10FromObservation,
+  evaluateTotalCholesterolLt200,
+  evaluateLdlLt130,
+  evaluateFastingGlucoseLt100,
+  evaluateTriglyceridesLt150,
 };

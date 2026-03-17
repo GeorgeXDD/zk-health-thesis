@@ -10,6 +10,10 @@ function normalizeJournalShape(journal) {
     "out_covid",
     "out_preg",
     "out_a1c_ok",
+    "out_total_chol_ok",
+    "out_ldl_ok",
+    "out_fasting_glucose_ok",
+    "out_triglycerides_ok",
     "nonce_field",
     "req_hiv",
     "req_hepb",
@@ -17,6 +21,10 @@ function normalizeJournalShape(journal) {
     "req_covid",
     "req_preg",
     "req_a1c",
+    "req_total_chol",
+    "req_ldl",
+    "req_fasting_glucose",
+    "req_triglycerides",
   ];
   for (const key of required) {
     if (j[key] === undefined || j[key] === null) {
@@ -30,6 +38,10 @@ function normalizeJournalShape(journal) {
     out_covid: Number(j.out_covid),
     out_preg: Number(j.out_preg),
     out_a1c_ok: Number(j.out_a1c_ok),
+    out_total_chol_ok: Number(j.out_total_chol_ok),
+    out_ldl_ok: Number(j.out_ldl_ok),
+    out_fasting_glucose_ok: Number(j.out_fasting_glucose_ok),
+    out_triglycerides_ok: Number(j.out_triglycerides_ok),
     nonce_field: String(j.nonce_field),
     req_hiv: Number(j.req_hiv),
     req_hepb: Number(j.req_hepb),
@@ -37,6 +49,10 @@ function normalizeJournalShape(journal) {
     req_covid: Number(j.req_covid),
     req_preg: Number(j.req_preg),
     req_a1c: Number(j.req_a1c),
+    req_total_chol: Number(j.req_total_chol),
+    req_ldl: Number(j.req_ldl),
+    req_fasting_glucose: Number(j.req_fasting_glucose),
+    req_triglycerides: Number(j.req_triglycerides),
   };
 }
 
@@ -50,13 +66,21 @@ function journalsEqual(a, b) {
     ja.out_covid === jb.out_covid &&
     ja.out_preg === jb.out_preg &&
     ja.out_a1c_ok === jb.out_a1c_ok &&
+    ja.out_total_chol_ok === jb.out_total_chol_ok &&
+    ja.out_ldl_ok === jb.out_ldl_ok &&
+    ja.out_fasting_glucose_ok === jb.out_fasting_glucose_ok &&
+    ja.out_triglycerides_ok === jb.out_triglycerides_ok &&
     ja.nonce_field === jb.nonce_field &&
     ja.req_hiv === jb.req_hiv &&
     ja.req_hepb === jb.req_hepb &&
     ja.req_hepc === jb.req_hepc &&
     ja.req_covid === jb.req_covid &&
     ja.req_preg === jb.req_preg &&
-    ja.req_a1c === jb.req_a1c
+    ja.req_a1c === jb.req_a1c &&
+    ja.req_total_chol === jb.req_total_chol &&
+    ja.req_ldl === jb.req_ldl &&
+    ja.req_fasting_glucose === jb.req_fasting_glucose &&
+    ja.req_triglycerides === jb.req_triglycerides
   );
 }
 

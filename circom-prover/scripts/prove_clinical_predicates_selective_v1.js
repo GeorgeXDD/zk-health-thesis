@@ -29,6 +29,10 @@ async function main() {
     "covidStatus",
     "pregnancyStatus",
     "hba1cX100",
+    "totalCholesterolX10",
+    "ldlX10",
+    "fastingGlucoseX10",
+    "triglyceridesX10",
     "nonce",
     "reqHiv",
     "reqHepB",
@@ -36,6 +40,10 @@ async function main() {
     "reqCovid",
     "reqPreg",
     "reqA1c",
+    "reqTotalChol",
+    "reqLdl",
+    "reqFastingGlucose",
+    "reqTriglycerides",
   ];
 
   for (const k of required) {
@@ -54,6 +62,10 @@ async function main() {
     covidStatus: input.covidStatus,
     pregnancyStatus: input.pregnancyStatus,
     hba1cX100: input.hba1cX100,
+    totalCholesterolX10: input.totalCholesterolX10,
+    ldlX10: input.ldlX10,
+    fastingGlucoseX10: input.fastingGlucoseX10,
+    triglyceridesX10: input.triglyceridesX10,
     nonce: nonceField,
     reqHiv: input.reqHiv,
     reqHepB: input.reqHepB,
@@ -61,6 +73,10 @@ async function main() {
     reqCovid: input.reqCovid,
     reqPreg: input.reqPreg,
     reqA1c: input.reqA1c,
+    reqTotalChol: input.reqTotalChol,
+    reqLdl: input.reqLdl,
+    reqFastingGlucose: input.reqFastingGlucose,
+    reqTriglycerides: input.reqTriglycerides,
   };
 
   const base = path.join(
