@@ -8,36 +8,68 @@ use methods::{STARK_PROVER_ELF as METHOD_ELF, STARK_PROVER_ID as METHOD_ID};
 #[derive(Deserialize)]
 struct InputsJson {
     hiv_status_bit: u32,
+    hepb_status_bit: u32,
+    hepc_status_bit: u32,
+    covid_status_bit: u32,
+    pregnancy_status_bit: u32,
     hba1c_x100: u32,
     nonce_field: String,
     req_hiv: u32,
+    req_hepb: u32,
+    req_hepc: u32,
+    req_covid: u32,
+    req_preg: u32,
     req_a1c: u32,
 }
 
 #[derive(Serialize, Deserialize)]
 struct Inputs {
     hiv_status_bit: u32,
+    hepb_status_bit: u32,
+    hepc_status_bit: u32,
+    covid_status_bit: u32,
+    pregnancy_status_bit: u32,
     hba1c_x100: u32,
     nonce_field: u128,
     req_hiv: u32,
+    req_hepb: u32,
+    req_hepc: u32,
+    req_covid: u32,
+    req_preg: u32,
     req_a1c: u32,
 }
 
 #[derive(Serialize, Deserialize)]
 struct Journal {
     out_hiv: u32,
+    out_hepb: u32,
+    out_hepc: u32,
+    out_covid: u32,
+    out_preg: u32,
     out_a1c_ok: u32,
     nonce_field: u128,
     req_hiv: u32,
+    req_hepb: u32,
+    req_hepc: u32,
+    req_covid: u32,
+    req_preg: u32,
     req_a1c: u32,
 }
 
 #[derive(Serialize)]
 struct JournalOut {
     out_hiv: u32,
+    out_hepb: u32,
+    out_hepc: u32,
+    out_covid: u32,
+    out_preg: u32,
     out_a1c_ok: u32,
     nonce_field: String,
     req_hiv: u32,
+    req_hepb: u32,
+    req_hepc: u32,
+    req_covid: u32,
+    req_preg: u32,
     req_a1c: u32,
 }
 
@@ -127,9 +159,17 @@ fn receipt_kind(receipt: &Receipt) -> String {
 fn journal_to_out(j: &Journal) -> JournalOut {
     JournalOut {
         out_hiv: j.out_hiv,
+        out_hepb: j.out_hepb,
+        out_hepc: j.out_hepc,
+        out_covid: j.out_covid,
+        out_preg: j.out_preg,
         out_a1c_ok: j.out_a1c_ok,
         nonce_field: j.nonce_field.to_string(),
         req_hiv: j.req_hiv,
+        req_hepb: j.req_hepb,
+        req_hepc: j.req_hepc,
+        req_covid: j.req_covid,
+        req_preg: j.req_preg,
         req_a1c: j.req_a1c,
     }
 }
@@ -142,9 +182,17 @@ fn handle_prove(in_path: &str, out_path: &str) {
 
     let guest_input = Inputs {
         hiv_status_bit: raw.hiv_status_bit,
+        hepb_status_bit: raw.hepb_status_bit,
+        hepc_status_bit: raw.hepc_status_bit,
+        covid_status_bit: raw.covid_status_bit,
+        pregnancy_status_bit: raw.pregnancy_status_bit,
         hba1c_x100: raw.hba1c_x100,
         nonce_field: parse_nonce(&raw.nonce_field),
         req_hiv: raw.req_hiv,
+        req_hepb: raw.req_hepb,
+        req_hepc: raw.req_hepc,
+        req_covid: raw.req_covid,
+        req_preg: raw.req_preg,
         req_a1c: raw.req_a1c,
     };
 

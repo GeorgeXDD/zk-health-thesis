@@ -19,13 +19,7 @@ function runNodeScript(scriptPath, args) {
   });
 }
 
-async function proveSelectivePredicates({
-  hivStatus,
-  hba1cX100,
-  nonce,
-  reqHiv,
-  reqA1c,
-}) {
+async function proveSelectivePredicates(input) {
   const tmpIn = path.join(
     os.tmpdir(),
     `circom_in_${Date.now()}_${Math.random()}.json`,
@@ -35,7 +29,6 @@ async function proveSelectivePredicates({
     `circom_out_${Date.now()}_${Math.random()}.json`,
   );
 
-  const input = { hivStatus, hba1cX100, nonce, reqHiv, reqA1c };
   fs.writeFileSync(tmpIn, JSON.stringify(input, null, 2));
 
   const script = path.resolve(
@@ -45,7 +38,7 @@ async function proveSelectivePredicates({
     "..",
     "circom-prover",
     "scripts",
-    "prove_patient_predicates_hiv_a1c_selective.js",
+    "prove_clinical_predicates_selective_v1.js",
   );
 
   if (!fs.existsSync(script)) {

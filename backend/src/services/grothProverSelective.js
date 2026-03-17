@@ -42,7 +42,7 @@ async function proveSelectivePredicates(input) {
     "..",
     "circom-prover",
     "scripts",
-    "prove_patient_predicates_hiv_a1c_selective.js",
+    "prove_clinical_predicates_selective_v1.js",
   );
 
   if (!fs.existsSync(script)) {

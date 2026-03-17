@@ -5,8 +5,16 @@ const { requireAuth, requireRole } = require("../middleware/auth");
 
 const {
   HIV_PREDICATE,
+  HEPB_PREDICATE,
+  HEPC_PREDICATE,
+  COVID_PREDICATE,
+  PREGNANCY_PREDICATE,
   HBA1C_PREDICATE,
   hivStatusBitFromObservation,
+  hepBStatusBitFromObservation,
+  hepCStatusBitFromObservation,
+  covidStatusBitFromObservation,
+  pregnancyStatusBitFromObservation,
   hba1cX100FromObservation,
 } = require("../services/predicates");
 
@@ -33,7 +41,14 @@ function randomNonceHex(bytes = 16) {
   return crypto.randomBytes(bytes).toString("hex");
 }
 
-const ALLOWED_PREDICATES = new Set([HIV_PREDICATE, HBA1C_PREDICATE]);
+const ALLOWED_PREDICATES = new Set([
+  HIV_PREDICATE,
+  HEPB_PREDICATE,
+  HEPC_PREDICATE,
+  COVID_PREDICATE,
+  PREGNANCY_PREDICATE,
+  HBA1C_PREDICATE,
+]);
 const ALLOWED_PROOF_SYSTEMS = new Set(["GROTH16", "STARK", "HYBRID", "FHIR"]);
 
 function normalizeProofSystem(s) {
@@ -48,8 +63,12 @@ function normalizeProofSystem(s) {
 
 function predicateSelectorsFrom(predicates) {
   const reqHiv = predicates.includes(HIV_PREDICATE) ? 1 : 0;
+  const reqHepB = predicates.includes(HEPB_PREDICATE) ? 1 : 0;
+  const reqHepC = predicates.includes(HEPC_PREDICATE) ? 1 : 0;
+  const reqCovid = predicates.includes(COVID_PREDICATE) ? 1 : 0;
+  const reqPreg = predicates.includes(PREGNANCY_PREDICATE) ? 1 : 0;
   const reqA1c = predicates.includes(HBA1C_PREDICATE) ? 1 : 0;
-  return { reqHiv, reqA1c };
+  return { reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c };
 }
 
 function filterDecodedForDoctor(predicates, decodedAll) {
@@ -57,6 +76,14 @@ function filterDecodedForDoctor(predicates, decodedAll) {
 
   if (Array.isArray(predicates)) {
     if (predicates.includes(HIV_PREDICATE)) filtered.outHiv = decodedAll.outHiv;
+    if (predicates.includes(HEPB_PREDICATE))
+      filtered.outHepB = decodedAll.outHepB;
+    if (predicates.includes(HEPC_PREDICATE))
+      filtered.outHepC = decodedAll.outHepC;
+    if (predicates.includes(COVID_PREDICATE))
+      filtered.outCovid = decodedAll.outCovid;
+    if (predicates.includes(PREGNANCY_PREDICATE))
+      filtered.outPreg = decodedAll.outPreg;
     if (predicates.includes(HBA1C_PREDICATE))
       filtered.outA1cOk = decodedAll.outA1cOk;
   }
@@ -72,9 +99,17 @@ function decodeFromHybridJournal(journal) {
   const j = journal || {};
   const required = [
     "out_hiv",
+    "out_hepb",
+    "out_hepc",
+    "out_covid",
+    "out_preg",
     "out_a1c_ok",
     "nonce_field",
     "req_hiv",
+    "req_hepb",
+    "req_hepc",
+    "req_covid",
+    "req_preg",
     "req_a1c",
   ];
   for (const key of required) {
@@ -84,9 +119,17 @@ function decodeFromHybridJournal(journal) {
   }
   return {
     outHiv: Number(j.out_hiv),
+    outHepB: Number(j.out_hepb),
+    outHepC: Number(j.out_hepc),
+    outCovid: Number(j.out_covid),
+    outPreg: Number(j.out_preg),
     outA1cOk: Number(j.out_a1c_ok),
     nonceField: String(j.nonce_field),
     reqHiv: Number(j.req_hiv),
+    reqHepB: Number(j.req_hepb),
+    reqHepC: Number(j.req_hepc),
+    reqCovid: Number(j.req_covid),
+    reqPreg: Number(j.req_preg),
     reqA1c: Number(j.req_a1c),
   };
 }
@@ -94,11 +137,29 @@ function decodeFromHybridJournal(journal) {
 function decodedShapeEquals(a, b) {
   return (
     String(a?.outHiv) === String(b?.outHiv) &&
+    String(a?.outHepB) === String(b?.outHepB) &&
+    String(a?.outHepC) === String(b?.outHepC) &&
+    String(a?.outCovid) === String(b?.outCovid) &&
+    String(a?.outPreg) === String(b?.outPreg) &&
     String(a?.outA1cOk) === String(b?.outA1cOk) &&
     String(a?.nonceField) === String(b?.nonceField) &&
     String(a?.reqHiv) === String(b?.reqHiv) &&
+    String(a?.reqHepB) === String(b?.reqHepB) &&
+    String(a?.reqHepC) === String(b?.reqHepC) &&
+    String(a?.reqCovid) === String(b?.reqCovid) &&
+    String(a?.reqPreg) === String(b?.reqPreg) &&
     String(a?.reqA1c) === String(b?.reqA1c)
   );
+}
+
+function findLatestObservation(rows, extractor) {
+  for (const row of rows) {
+    try {
+      extractor(row.resource);
+      return { obs: row.resource, hash: row.resource_hash };
+    } catch {}
+  }
+  return { obs: null, hash: null };
 }
 
 router.post(
@@ -279,8 +340,16 @@ router.post(
         });
       }
 
-      const { reqHiv, reqA1c } = predicateSelectorsFrom(predicates);
-      if (reqHiv === 0 && reqA1c === 0) {
+      const { reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c } =
+        predicateSelectorsFrom(predicates);
+      if (
+        reqHiv === 0 &&
+        reqHepB === 0 &&
+        reqHepC === 0 &&
+        reqCovid === 0 &&
+        reqPreg === 0 &&
+        reqA1c === 0
+      ) {
         await client.query("ROLLBACK");
         return res
           .status(400)
@@ -305,18 +374,24 @@ router.post(
 
       let hivObs = null;
       let hivHash = null;
+      let hepBObs = null;
+      let hepBHash = null;
+      let hepCObs = null;
+      let hepCHash = null;
+      let covidObs = null;
+      let covidHash = null;
+      let pregObs = null;
+      let pregHash = null;
       let a1cObs = null;
       let a1cHash = null;
 
       if (reqHiv) {
-        for (const row of allObs.rows) {
-          try {
-            hivStatusBitFromObservation(row.resource);
-            hivObs = row.resource;
-            hivHash = row.resource_hash;
-            break;
-          } catch {}
-        }
+        const found = findLatestObservation(
+          allObs.rows,
+          hivStatusBitFromObservation,
+        );
+        hivObs = found.obs;
+        hivHash = found.hash;
         if (!hivObs) {
           await client.query("ROLLBACK");
           return res
@@ -325,15 +400,73 @@ router.post(
         }
       }
 
-      if (reqA1c) {
-        for (const row of allObs.rows) {
-          try {
-            hba1cX100FromObservation(row.resource);
-            a1cObs = row.resource;
-            a1cHash = row.resource_hash;
-            break;
-          } catch {}
+      if (reqHepB) {
+        const found = findLatestObservation(
+          allObs.rows,
+          hepBStatusBitFromObservation,
+        );
+        hepBObs = found.obs;
+        hepBHash = found.hash;
+        if (!hepBObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No Hepatitis B Observation found for patient" });
         }
+      }
+
+      if (reqHepC) {
+        const found = findLatestObservation(
+          allObs.rows,
+          hepCStatusBitFromObservation,
+        );
+        hepCObs = found.obs;
+        hepCHash = found.hash;
+        if (!hepCObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No Hepatitis C Observation found for patient" });
+        }
+      }
+
+      if (reqCovid) {
+        const found = findLatestObservation(
+          allObs.rows,
+          covidStatusBitFromObservation,
+        );
+        covidObs = found.obs;
+        covidHash = found.hash;
+        if (!covidObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No COVID Observation found for patient" });
+        }
+      }
+
+      if (reqPreg) {
+        const found = findLatestObservation(
+          allObs.rows,
+          pregnancyStatusBitFromObservation,
+        );
+        pregObs = found.obs;
+        pregHash = found.hash;
+        if (!pregObs) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "No Pregnancy Observation found for patient" });
+        }
+      }
+
+      if (reqA1c) {
+        const found = findLatestObservation(
+          allObs.rows,
+          hba1cX100FromObservation,
+        );
+        a1cObs = found.obs;
+        a1cHash = found.hash;
         if (!a1cObs) {
           await client.query("ROLLBACK");
           return res
@@ -343,6 +476,14 @@ router.post(
       }
 
       const hivStatus = reqHiv ? hivStatusBitFromObservation(hivObs) : 0;
+      const hepBStatus = reqHepB ? hepBStatusBitFromObservation(hepBObs) : 0;
+      const hepCStatus = reqHepC ? hepCStatusBitFromObservation(hepCObs) : 0;
+      const covidStatus = reqCovid
+        ? covidStatusBitFromObservation(covidObs)
+        : 0;
+      const pregnancyStatus = reqPreg
+        ? pregnancyStatusBitFromObservation(pregObs)
+        : 0;
       const hba1cX100 = reqA1c ? hba1cX100FromObservation(a1cObs) : 0;
 
       const proofSystem = normalizeProofSystem(
@@ -364,31 +505,57 @@ router.post(
       if (proofSystem === "GROTH16") {
         const proverOut = await proveSelectivePredicates({
           hivStatus,
+          hepBStatus,
+          hepCStatus,
+          covidStatus,
+          pregnancyStatus,
           hba1cX100,
           nonce: request.nonce,
           reqHiv,
+          reqHepB,
+          reqHepC,
+          reqCovid,
+          reqPreg,
           reqA1c,
         });
 
-        // publicSignals layout: [outHiv, outA1cOk, nonceField, reqHiv, reqA1c]
+        // publicSignals layout:
+        // [outHiv, outHepB, outHepC, outCovid, outPreg, outA1cOk, nonceField,
+        //  reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c]
         const publicSignals = proverOut.publicSignals || [];
-        if (!Array.isArray(publicSignals) || publicSignals.length < 5) {
+        if (!Array.isArray(publicSignals) || publicSignals.length < 13) {
           throw new Error("Unexpected publicSignals returned by Groth prover");
         }
 
         const outHiv = Number(publicSignals[0]);
-        const outA1cOk = Number(publicSignals[1]);
+        const outHepB = Number(publicSignals[1]);
+        const outHepC = Number(publicSignals[2]);
+        const outCovid = Number(publicSignals[3]);
+        const outPreg = Number(publicSignals[4]);
+        const outA1cOk = Number(publicSignals[5]);
 
         decoded = {
           outHiv,
+          outHepB,
+          outHepC,
+          outCovid,
+          outPreg,
           outA1cOk,
-          nonceField: String(publicSignals[2]),
-          reqHiv: Number(publicSignals[3]),
-          reqA1c: Number(publicSignals[4]),
+          nonceField: String(publicSignals[6]),
+          reqHiv: Number(publicSignals[7]),
+          reqHepB: Number(publicSignals[8]),
+          reqHepC: Number(publicSignals[9]),
+          reqCovid: Number(publicSignals[10]),
+          reqPreg: Number(publicSignals[11]),
+          reqA1c: Number(publicSignals[12]),
         };
 
         predicatesResult = {};
         if (reqHiv) predicatesResult.isHIVNegative = outHiv === 1;
+        if (reqHepB) predicatesResult.isHepBNegative = outHepB === 1;
+        if (reqHepC) predicatesResult.isHepCNegative = outHepC === 1;
+        if (reqCovid) predicatesResult.isCovidNegative = outCovid === 1;
+        if (reqPreg) predicatesResult.isPregnancyNegative = outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = outA1cOk === 1;
 
         proofTypeToStore = "GROTH16";
@@ -397,7 +564,14 @@ router.post(
           publicSignals,
           nonceField: proverOut.nonceField,
           decoded,
-          fhirHashes: { hiv: hivHash || null, hba1c: a1cHash || null },
+          fhirHashes: {
+            hiv: hivHash || null,
+            hepb: hepBHash || null,
+            hepc: hepCHash || null,
+            covid: covidHash || null,
+            pregnancy: pregHash || null,
+            hba1c: a1cHash || null,
+          },
         };
 
         verifiedOk = !!proverOut.verifiedOk;
@@ -407,9 +581,17 @@ router.post(
       } else if (proofSystem === "STARK") {
         const starkOut = await proveStarkPredicates({
           hivStatusBit: hivStatus,
+          hepBStatusBit: hepBStatus,
+          hepCStatusBit: hepCStatus,
+          covidStatusBit: covidStatus,
+          pregnancyStatusBit: pregnancyStatus,
           hba1cX100: hba1cX100,
           nonceField: request.nonce,
           reqHiv,
+          reqHepB,
+          reqHepC,
+          reqCovid,
+          reqPreg,
           reqA1c,
         });
 
@@ -419,14 +601,27 @@ router.post(
 
         decoded = {
           outHiv: Number(j.out_hiv ?? 0),
+          outHepB: Number(j.out_hepb ?? 0),
+          outHepC: Number(j.out_hepc ?? 0),
+          outCovid: Number(j.out_covid ?? 0),
+          outPreg: Number(j.out_preg ?? 0),
           outA1cOk: Number(j.out_a1c_ok ?? 0),
           nonceField: nonceFieldDec,
           reqHiv: Number(j.req_hiv ?? reqHiv),
+          reqHepB: Number(j.req_hepb ?? reqHepB),
+          reqHepC: Number(j.req_hepc ?? reqHepC),
+          reqCovid: Number(j.req_covid ?? reqCovid),
+          reqPreg: Number(j.req_preg ?? reqPreg),
           reqA1c: Number(j.req_a1c ?? reqA1c),
         };
 
         predicatesResult = {};
         if (reqHiv) predicatesResult.isHIVNegative = decoded.outHiv === 1;
+        if (reqHepB) predicatesResult.isHepBNegative = decoded.outHepB === 1;
+        if (reqHepC) predicatesResult.isHepCNegative = decoded.outHepC === 1;
+        if (reqCovid) predicatesResult.isCovidNegative = decoded.outCovid === 1;
+        if (reqPreg)
+          predicatesResult.isPregnancyNegative = decoded.outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = decoded.outA1cOk === 1;
 
         proofTypeToStore = "STARK";
@@ -436,7 +631,14 @@ router.post(
         publicSignalsToStore = {
           journal: j,
           decoded,
-          fhirHashes: { hiv: hivHash || null, hba1c: a1cHash || null },
+          fhirHashes: {
+            hiv: hivHash || null,
+            hepb: hepBHash || null,
+            hepc: hepCHash || null,
+            covid: covidHash || null,
+            pregnancy: pregHash || null,
+            hba1c: a1cHash || null,
+          },
         };
 
         verifiedOk = !!starkOut.verified_ok;
@@ -446,9 +648,17 @@ router.post(
       } else if (proofSystem === "HYBRID") {
         const starkOut = await proveStarkPredicates({
           hivStatusBit: hivStatus,
+          hepBStatusBit: hepBStatus,
+          hepCStatusBit: hepCStatus,
+          covidStatusBit: covidStatus,
+          pregnancyStatusBit: pregnancyStatus,
           hba1cX100: hba1cX100,
           nonceField: request.nonce,
           reqHiv,
+          reqHepB,
+          reqHepC,
+          reqCovid,
+          reqPreg,
           reqA1c,
         });
 
@@ -476,6 +686,11 @@ router.post(
 
         predicatesResult = {};
         if (reqHiv) predicatesResult.isHIVNegative = decoded.outHiv === 1;
+        if (reqHepB) predicatesResult.isHepBNegative = decoded.outHepB === 1;
+        if (reqHepC) predicatesResult.isHepCNegative = decoded.outHepC === 1;
+        if (reqCovid) predicatesResult.isCovidNegative = decoded.outCovid === 1;
+        if (reqPreg)
+          predicatesResult.isPregnancyNegative = decoded.outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = decoded.outA1cOk === 1;
 
         proofTypeToStore = "HYBRID";
@@ -487,7 +702,14 @@ router.post(
         publicSignalsToStore = {
           journal: j,
           decoded,
-          fhirHashes: { hiv: hivHash || null, hba1c: a1cHash || null },
+          fhirHashes: {
+            hiv: hivHash || null,
+            hepb: hepBHash || null,
+            hepc: hepCHash || null,
+            covid: covidHash || null,
+            pregnancy: pregHash || null,
+            hba1c: a1cHash || null,
+          },
           hybrid: {
             mode: "HYBRID",
             wrapperReceiptKind: wrapOut.receiptKind ?? null,
@@ -506,21 +728,35 @@ router.post(
         const nonceFieldDec = BigInt("0x" + request.nonce).toString();
 
         // define outputs in the same shape as other schemes
-        // outHiv: 1 means HIV_NEGATIVE is true
-        // outA1cOk: 1 means HbA1c < 6.5 is true
         const outHiv = reqHiv ? (hivStatus === 0 ? 1 : 0) : 0;
+        const outHepB = reqHepB ? (hepBStatus === 0 ? 1 : 0) : 0;
+        const outHepC = reqHepC ? (hepCStatus === 0 ? 1 : 0) : 0;
+        const outCovid = reqCovid ? (covidStatus === 0 ? 1 : 0) : 0;
+        const outPreg = reqPreg ? (pregnancyStatus === 0 ? 1 : 0) : 0;
         const outA1cOk = reqA1c ? (hba1cX100 < 650 ? 1 : 0) : 0;
 
         decoded = {
           outHiv,
+          outHepB,
+          outHepC,
+          outCovid,
+          outPreg,
           outA1cOk,
           nonceField: nonceFieldDec,
           reqHiv,
+          reqHepB,
+          reqHepC,
+          reqCovid,
+          reqPreg,
           reqA1c,
         };
 
         predicatesResult = {};
         if (reqHiv) predicatesResult.isHIVNegative = outHiv === 1;
+        if (reqHepB) predicatesResult.isHepBNegative = outHepB === 1;
+        if (reqHepC) predicatesResult.isHepCNegative = outHepC === 1;
+        if (reqCovid) predicatesResult.isCovidNegative = outCovid === 1;
+        if (reqPreg) predicatesResult.isPregnancyNegative = outPreg === 1;
         if (reqA1c) predicatesResult.isHba1cLt6_5 = outA1cOk === 1;
 
         proofTypeToStore = "FHIR";
@@ -530,7 +766,14 @@ router.post(
 
         publicSignalsToStore = {
           decoded,
-          fhirHashes: { hiv: hivHash || null, hba1c: a1cHash || null },
+          fhirHashes: {
+            hiv: hivHash || null,
+            hepb: hepBHash || null,
+            hepc: hepCHash || null,
+            covid: covidHash || null,
+            pregnancy: pregHash || null,
+            hba1c: a1cHash || null,
+          },
           baseline: { kind: "FHIR_ONLY" },
         };
 
@@ -786,7 +1029,6 @@ router.post(
     } else if (row.proof_type === "FHIR") {
       // Baseline verify = recompute from current FHIR resources and compare to stored decoded
       const storedDecoded = psContainer.decoded || {};
-      const storedPredicates = psContainer?.decoded ? request.predicates : [];
 
       // Re-load observations similarly to approve, but now we need patient_id
       const rq2 = await pool.query(
@@ -797,7 +1039,8 @@ router.post(
       const nonce = rq2.rows[0].nonce;
       const predicates = rq2.rows[0].predicates || [];
 
-      const { reqHiv, reqA1c } = predicateSelectorsFrom(predicates);
+      const { reqHiv, reqHepB, reqHepC, reqCovid, reqPreg, reqA1c } =
+        predicateSelectorsFrom(predicates);
 
       const allObs = await pool.query(
         `SELECT resource_hash, resource
@@ -809,30 +1052,72 @@ router.post(
 
       // Find the latest matching obs for each
       let hivObs = null;
+      let hepBObs = null;
+      let hepCObs = null;
+      let covidObs = null;
+      let pregObs = null;
       let a1cObs = null;
 
       if (reqHiv) {
-        for (const row2 of allObs.rows) {
-          try {
-            hivStatusBitFromObservation(row2.resource);
-            hivObs = row2.resource;
-            break;
-          } catch {}
-        }
+        hivObs = findLatestObservation(
+          allObs.rows,
+          hivStatusBitFromObservation,
+        ).obs;
         if (!hivObs)
           return res
             .status(400)
             .json({ error: "No HIV Observation found for patient" });
       }
 
+      if (reqHepB) {
+        hepBObs = findLatestObservation(
+          allObs.rows,
+          hepBStatusBitFromObservation,
+        ).obs;
+        if (!hepBObs)
+          return res
+            .status(400)
+            .json({ error: "No Hepatitis B Observation found for patient" });
+      }
+
+      if (reqHepC) {
+        hepCObs = findLatestObservation(
+          allObs.rows,
+          hepCStatusBitFromObservation,
+        ).obs;
+        if (!hepCObs)
+          return res
+            .status(400)
+            .json({ error: "No Hepatitis C Observation found for patient" });
+      }
+
+      if (reqCovid) {
+        covidObs = findLatestObservation(
+          allObs.rows,
+          covidStatusBitFromObservation,
+        ).obs;
+        if (!covidObs)
+          return res
+            .status(400)
+            .json({ error: "No COVID Observation found for patient" });
+      }
+
+      if (reqPreg) {
+        pregObs = findLatestObservation(
+          allObs.rows,
+          pregnancyStatusBitFromObservation,
+        ).obs;
+        if (!pregObs)
+          return res
+            .status(400)
+            .json({ error: "No Pregnancy Observation found for patient" });
+      }
+
       if (reqA1c) {
-        for (const row2 of allObs.rows) {
-          try {
-            hba1cX100FromObservation(row2.resource);
-            a1cObs = row2.resource;
-            break;
-          } catch {}
-        }
+        a1cObs = findLatestObservation(
+          allObs.rows,
+          hba1cX100FromObservation,
+        ).obs;
         if (!a1cObs)
           return res
             .status(400)
@@ -840,15 +1125,31 @@ router.post(
       }
 
       const hivStatus = reqHiv ? hivStatusBitFromObservation(hivObs) : 0;
+      const hepBStatus = reqHepB ? hepBStatusBitFromObservation(hepBObs) : 0;
+      const hepCStatus = reqHepC ? hepCStatusBitFromObservation(hepCObs) : 0;
+      const covidStatus = reqCovid
+        ? covidStatusBitFromObservation(covidObs)
+        : 0;
+      const pregStatus = reqPreg
+        ? pregnancyStatusBitFromObservation(pregObs)
+        : 0;
       const hba1cX100 = reqA1c ? hba1cX100FromObservation(a1cObs) : 0;
 
       const nonceFieldDec = BigInt("0x" + nonce).toString();
 
       const recomputedDecoded = {
         outHiv: reqHiv ? (hivStatus === 0 ? 1 : 0) : 0,
+        outHepB: reqHepB ? (hepBStatus === 0 ? 1 : 0) : 0,
+        outHepC: reqHepC ? (hepCStatus === 0 ? 1 : 0) : 0,
+        outCovid: reqCovid ? (covidStatus === 0 ? 1 : 0) : 0,
+        outPreg: reqPreg ? (pregStatus === 0 ? 1 : 0) : 0,
         outA1cOk: reqA1c ? (hba1cX100 < 650 ? 1 : 0) : 0,
         nonceField: nonceFieldDec,
         reqHiv,
+        reqHepB,
+        reqHepC,
+        reqCovid,
+        reqPreg,
         reqA1c,
       };
 

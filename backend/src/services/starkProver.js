@@ -37,9 +37,17 @@ function normalizeNonceField(nonceField) {
 
 async function proveStarkPredicates({
   hivStatusBit,
+  hepBStatusBit,
+  hepCStatusBit,
+  covidStatusBit,
+  pregnancyStatusBit,
   hba1cX100,
   nonceField,
   reqHiv,
+  reqHepB,
+  reqHepC,
+  reqCovid,
+  reqPreg,
   reqA1c,
 }) {
   const tmpIn = path.join(
@@ -53,9 +61,17 @@ async function proveStarkPredicates({
 
   const input = {
     hiv_status_bit: Number(hivStatusBit) >>> 0,
+    hepb_status_bit: Number(hepBStatusBit) >>> 0,
+    hepc_status_bit: Number(hepCStatusBit) >>> 0,
+    covid_status_bit: Number(covidStatusBit) >>> 0,
+    pregnancy_status_bit: Number(pregnancyStatusBit) >>> 0,
     hba1c_x100: Number(hba1cX100) >>> 0,
     nonce_field: normalizeNonceField(nonceField),
     req_hiv: Number(reqHiv) >>> 0,
+    req_hepb: Number(reqHepB) >>> 0,
+    req_hepc: Number(reqHepC) >>> 0,
+    req_covid: Number(reqCovid) >>> 0,
+    req_preg: Number(reqPreg) >>> 0,
     req_a1c: Number(reqA1c) >>> 0,
   };
 

@@ -1,7 +1,15 @@
 const HIV_PREDICATE = "HIV_NEGATIVE";
+const HEPB_PREDICATE = "HEPB_NEGATIVE";
+const HEPC_PREDICATE = "HEPC_NEGATIVE";
+const COVID_PREDICATE = "COVID_NEGATIVE";
+const PREGNANCY_PREDICATE = "PREGNANCY_NEGATIVE";
 const HBA1C_PREDICATE = "HBA1C_LT_6_5";
 
 const HIV_LOINC_CODES = new Set(["56888-1"]);
+const HEPB_LOINC_CODES = new Set(["5196-1"]);
+const HEPC_LOINC_CODES = new Set(["13955-0"]);
+const COVID_LOINC_CODES = new Set(["94500-6"]);
+const PREGNANCY_LOINC_CODES = new Set(["2106-3"]);
 const SNOMED_NEGATIVE = "260385009";
 
 function getObservationCode(obs) {
@@ -31,6 +39,70 @@ function evaluateHivNegative(observation) {
 
 function hivStatusBitFromObservation(observation) {
   const isNeg = evaluateHivNegative(observation);
+  return isNeg ? 0 : 1;
+}
+
+function evaluateHepBNegative(observation) {
+  const loinc = getObservationCode(observation);
+  if (!loinc || !HEPB_LOINC_CODES.has(loinc)) {
+    throw new Error(
+      `No matching Hepatitis B Observation found (code=${loinc || "null"})`,
+    );
+  }
+  const valueCode = getObservationValueCode(observation);
+  return valueCode === SNOMED_NEGATIVE;
+}
+
+function hepBStatusBitFromObservation(observation) {
+  const isNeg = evaluateHepBNegative(observation);
+  return isNeg ? 0 : 1;
+}
+
+function evaluateHepCNegative(observation) {
+  const loinc = getObservationCode(observation);
+  if (!loinc || !HEPC_LOINC_CODES.has(loinc)) {
+    throw new Error(
+      `No matching Hepatitis C Observation found (code=${loinc || "null"})`,
+    );
+  }
+  const valueCode = getObservationValueCode(observation);
+  return valueCode === SNOMED_NEGATIVE;
+}
+
+function hepCStatusBitFromObservation(observation) {
+  const isNeg = evaluateHepCNegative(observation);
+  return isNeg ? 0 : 1;
+}
+
+function evaluateCovidNegative(observation) {
+  const loinc = getObservationCode(observation);
+  if (!loinc || !COVID_LOINC_CODES.has(loinc)) {
+    throw new Error(
+      `No matching COVID-19 Observation found (code=${loinc || "null"})`,
+    );
+  }
+  const valueCode = getObservationValueCode(observation);
+  return valueCode === SNOMED_NEGATIVE;
+}
+
+function covidStatusBitFromObservation(observation) {
+  const isNeg = evaluateCovidNegative(observation);
+  return isNeg ? 0 : 1;
+}
+
+function evaluatePregnancyNegative(observation) {
+  const loinc = getObservationCode(observation);
+  if (!loinc || !PREGNANCY_LOINC_CODES.has(loinc)) {
+    throw new Error(
+      `No matching Pregnancy Observation found (code=${loinc || "null"})`,
+    );
+  }
+  const valueCode = getObservationValueCode(observation);
+  return valueCode === SNOMED_NEGATIVE;
+}
+
+function pregnancyStatusBitFromObservation(observation) {
+  const isNeg = evaluatePregnancyNegative(observation);
   return isNeg ? 0 : 1;
 }
 
@@ -72,10 +144,22 @@ function evaluateHba1cLt6_5(observation) {
 
 module.exports = {
   HIV_PREDICATE,
+  HEPB_PREDICATE,
+  HEPC_PREDICATE,
+  COVID_PREDICATE,
+  PREGNANCY_PREDICATE,
   HBA1C_PREDICATE,
 
   evaluateHivNegative,
   hivStatusBitFromObservation,
+  evaluateHepBNegative,
+  hepBStatusBitFromObservation,
+  evaluateHepCNegative,
+  hepCStatusBitFromObservation,
+  evaluateCovidNegative,
+  covidStatusBitFromObservation,
+  evaluatePregnancyNegative,
+  pregnancyStatusBitFromObservation,
 
   hba1cX100FromObservation,
   evaluateHba1cLt6_5,

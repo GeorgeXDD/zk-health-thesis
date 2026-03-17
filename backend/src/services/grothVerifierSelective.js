@@ -10,7 +10,7 @@ function loadVKey() {
     "..",
     "circom-prover",
     "build",
-    "patient_predicates_hiv_a1c_selective",
+    "clinical_predicates_selective_v1",
     "verification_key.json"
   );
 
