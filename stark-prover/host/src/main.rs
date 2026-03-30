@@ -1,148 +1,38 @@
+use base64::{engine::general_purpose, Engine as _};
 use risc0_zkvm::{default_prover, ExecutorEnv, InnerReceipt, ProverOpts, Receipt};
 use serde::{Deserialize, Serialize};
 use std::{env, fs, time::Instant};
-use base64::{engine::general_purpose, Engine as _};
 
 use methods::{STARK_PROVER_ELF as METHOD_ELF, STARK_PROVER_ID as METHOD_ID};
 
+const PRED_COUNT: usize = 100;
+
 #[derive(Deserialize)]
 struct InputsJson {
-    hiv_status_bit: u32,
-    hepb_status_bit: u32,
-    hepc_status_bit: u32,
-    covid_status_bit: u32,
-    pregnancy_status_bit: u32,
-    hba1c_x100: u32,
-    total_cholesterol_x10: u32,
-    ldl_x10: u32,
-    fasting_glucose_x10: u32,
-    triglycerides_x10: u32,
-    hdl_x10: u32,
-    systolic_bp_x10: u32,
-    diastolic_bp_x10: u32,
-    bmi_x10: u32,
-    creatinine_x10: u32,
+    values: Vec<u32>,
     nonce_field: String,
-    req_hiv: u32,
-    req_hepb: u32,
-    req_hepc: u32,
-    req_covid: u32,
-    req_preg: u32,
-    req_a1c: u32,
-    req_total_chol: u32,
-    req_ldl: u32,
-    req_fasting_glucose: u32,
-    req_triglycerides: u32,
-    req_hdl: u32,
-    req_systolic_bp: u32,
-    req_diastolic_bp: u32,
-    req_bmi: u32,
-    req_creatinine: u32,
+    reqs: Vec<u32>,
 }
 
 #[derive(Serialize, Deserialize)]
 struct Inputs {
-    hiv_status_bit: u32,
-    hepb_status_bit: u32,
-    hepc_status_bit: u32,
-    covid_status_bit: u32,
-    pregnancy_status_bit: u32,
-    hba1c_x100: u32,
-    total_cholesterol_x10: u32,
-    ldl_x10: u32,
-    fasting_glucose_x10: u32,
-    triglycerides_x10: u32,
-    hdl_x10: u32,
-    systolic_bp_x10: u32,
-    diastolic_bp_x10: u32,
-    bmi_x10: u32,
-    creatinine_x10: u32,
+    values: Vec<u32>,
     nonce_field: u128,
-    req_hiv: u32,
-    req_hepb: u32,
-    req_hepc: u32,
-    req_covid: u32,
-    req_preg: u32,
-    req_a1c: u32,
-    req_total_chol: u32,
-    req_ldl: u32,
-    req_fasting_glucose: u32,
-    req_triglycerides: u32,
-    req_hdl: u32,
-    req_systolic_bp: u32,
-    req_diastolic_bp: u32,
-    req_bmi: u32,
-    req_creatinine: u32,
+    reqs: Vec<u32>,
 }
 
 #[derive(Serialize, Deserialize)]
 struct Journal {
-    out_hiv: u32,
-    out_hepb: u32,
-    out_hepc: u32,
-    out_covid: u32,
-    out_preg: u32,
-    out_a1c_ok: u32,
-    out_total_chol_ok: u32,
-    out_ldl_ok: u32,
-    out_fasting_glucose_ok: u32,
-    out_triglycerides_ok: u32,
-    out_hdl_ok: u32,
-    out_systolic_bp_ok: u32,
-    out_diastolic_bp_ok: u32,
-    out_bmi_ok: u32,
-    out_creatinine_ok: u32,
+    outs: Vec<u32>,
     nonce_field: u128,
-    req_hiv: u32,
-    req_hepb: u32,
-    req_hepc: u32,
-    req_covid: u32,
-    req_preg: u32,
-    req_a1c: u32,
-    req_total_chol: u32,
-    req_ldl: u32,
-    req_fasting_glucose: u32,
-    req_triglycerides: u32,
-    req_hdl: u32,
-    req_systolic_bp: u32,
-    req_diastolic_bp: u32,
-    req_bmi: u32,
-    req_creatinine: u32,
+    reqs: Vec<u32>,
 }
 
 #[derive(Serialize)]
 struct JournalOut {
-    out_hiv: u32,
-    out_hepb: u32,
-    out_hepc: u32,
-    out_covid: u32,
-    out_preg: u32,
-    out_a1c_ok: u32,
-    out_total_chol_ok: u32,
-    out_ldl_ok: u32,
-    out_fasting_glucose_ok: u32,
-    out_triglycerides_ok: u32,
-    out_hdl_ok: u32,
-    out_systolic_bp_ok: u32,
-    out_diastolic_bp_ok: u32,
-    out_bmi_ok: u32,
-    out_creatinine_ok: u32,
+    outs: Vec<u32>,
     nonce_field: String,
-    req_hiv: u32,
-    req_hepb: u32,
-    req_hepc: u32,
-    req_covid: u32,
-    req_preg: u32,
-    req_a1c: u32,
-    req_total_chol: u32,
-    req_ldl: u32,
-    req_fasting_glucose: u32,
-    req_triglycerides: u32,
-    req_hdl: u32,
-    req_systolic_bp: u32,
-    req_diastolic_bp: u32,
-    req_bmi: u32,
-    req_creatinine: u32,
+    reqs: Vec<u32>,
 }
 
 #[derive(Serialize)]
@@ -181,18 +71,15 @@ struct WrapOutputs {
 fn parse_nonce(s: &str) -> u128 {
     let s = s.trim();
 
-    // 0x-prefixed hex
     if let Some(hex) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
         return u128::from_str_radix(hex, 16).expect("invalid hex nonce_field");
     }
 
-    // bare hex (like "ae9d09ab...")
     let is_hex = !s.is_empty() && s.chars().all(|c| c.is_ascii_hexdigit());
     if is_hex {
         return u128::from_str_radix(s, 16).expect("invalid bare-hex nonce_field");
     }
 
-    // decimal
     s.parse::<u128>().expect("invalid decimal nonce_field")
 }
 
@@ -228,39 +115,18 @@ fn receipt_kind(receipt: &Receipt) -> String {
     .to_string()
 }
 
+fn expect_vec_len_100(input: Vec<u32>, label: &str) -> Vec<u32> {
+    if input.len() != PRED_COUNT {
+        panic!("{label} must have length {PRED_COUNT}");
+    }
+    input
+}
+
 fn journal_to_out(j: &Journal) -> JournalOut {
     JournalOut {
-        out_hiv: j.out_hiv,
-        out_hepb: j.out_hepb,
-        out_hepc: j.out_hepc,
-        out_covid: j.out_covid,
-        out_preg: j.out_preg,
-        out_a1c_ok: j.out_a1c_ok,
-        out_total_chol_ok: j.out_total_chol_ok,
-        out_ldl_ok: j.out_ldl_ok,
-        out_fasting_glucose_ok: j.out_fasting_glucose_ok,
-        out_triglycerides_ok: j.out_triglycerides_ok,
-        out_hdl_ok: j.out_hdl_ok,
-        out_systolic_bp_ok: j.out_systolic_bp_ok,
-        out_diastolic_bp_ok: j.out_diastolic_bp_ok,
-        out_bmi_ok: j.out_bmi_ok,
-        out_creatinine_ok: j.out_creatinine_ok,
+        outs: j.outs.clone(),
         nonce_field: j.nonce_field.to_string(),
-        req_hiv: j.req_hiv,
-        req_hepb: j.req_hepb,
-        req_hepc: j.req_hepc,
-        req_covid: j.req_covid,
-        req_preg: j.req_preg,
-        req_a1c: j.req_a1c,
-        req_total_chol: j.req_total_chol,
-        req_ldl: j.req_ldl,
-        req_fasting_glucose: j.req_fasting_glucose,
-        req_triglycerides: j.req_triglycerides,
-        req_hdl: j.req_hdl,
-        req_systolic_bp: j.req_systolic_bp,
-        req_diastolic_bp: j.req_diastolic_bp,
-        req_bmi: j.req_bmi,
-        req_creatinine: j.req_creatinine,
+        reqs: j.reqs.clone(),
     }
 }
 
@@ -271,37 +137,9 @@ fn handle_prove(in_path: &str, out_path: &str) {
     let raw: InputsJson = serde_json::from_str(&inp_json).expect("parse input json");
 
     let guest_input = Inputs {
-        hiv_status_bit: raw.hiv_status_bit,
-        hepb_status_bit: raw.hepb_status_bit,
-        hepc_status_bit: raw.hepc_status_bit,
-        covid_status_bit: raw.covid_status_bit,
-        pregnancy_status_bit: raw.pregnancy_status_bit,
-        hba1c_x100: raw.hba1c_x100,
-        total_cholesterol_x10: raw.total_cholesterol_x10,
-        ldl_x10: raw.ldl_x10,
-        fasting_glucose_x10: raw.fasting_glucose_x10,
-        triglycerides_x10: raw.triglycerides_x10,
-        hdl_x10: raw.hdl_x10,
-        systolic_bp_x10: raw.systolic_bp_x10,
-        diastolic_bp_x10: raw.diastolic_bp_x10,
-        bmi_x10: raw.bmi_x10,
-        creatinine_x10: raw.creatinine_x10,
+        values: expect_vec_len_100(raw.values, "values"),
         nonce_field: parse_nonce(&raw.nonce_field),
-        req_hiv: raw.req_hiv,
-        req_hepb: raw.req_hepb,
-        req_hepc: raw.req_hepc,
-        req_covid: raw.req_covid,
-        req_preg: raw.req_preg,
-        req_a1c: raw.req_a1c,
-        req_total_chol: raw.req_total_chol,
-        req_ldl: raw.req_ldl,
-        req_fasting_glucose: raw.req_fasting_glucose,
-        req_triglycerides: raw.req_triglycerides,
-        req_hdl: raw.req_hdl,
-        req_systolic_bp: raw.req_systolic_bp,
-        req_diastolic_bp: raw.req_diastolic_bp,
-        req_bmi: raw.req_bmi,
-        req_creatinine: raw.req_creatinine,
+        reqs: expect_vec_len_100(raw.reqs, "reqs"),
     };
 
     let exec_env = ExecutorEnv::builder()
@@ -368,9 +206,7 @@ fn handle_wrap(receipt_b64: &str, out_path: &str) {
     let receipt = decode_receipt_b64(receipt_b64);
     let prover = default_prover();
 
-    // Ensure the input STARK receipt is valid before wrapping it.
-    let input_verified_ok = receipt.verify(METHOD_ID).is_ok();
-    if !input_verified_ok {
+    if !receipt.verify(METHOD_ID).is_ok() {
         panic!("input receipt failed verification");
     }
 

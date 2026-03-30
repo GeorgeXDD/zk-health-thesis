@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const snarkjs = require("snarkjs");
+const { PREDICATE_COUNT } = require("../../shared/predicateCatalog");
 
 function toFieldFromHexString(hex) {
   return BigInt("0x" + hex).toString();
@@ -22,43 +23,28 @@ async function main() {
 
   const input = JSON.parse(fs.readFileSync(inPath, "utf8"));
 
-  const required = [
-    "hivStatus",
-    "hepBStatus",
-    "hepCStatus",
-    "covidStatus",
-    "pregnancyStatus",
-    "hba1cX100",
-    "totalCholesterolX10",
-    "ldlX10",
-    "fastingGlucoseX10",
-    "triglyceridesX10",
-    "hdlX10",
-    "systolicBpX10",
-    "diastolicBpX10",
-    "bmiX10",
-    "creatinineX10",
-    "nonce",
-    "reqHiv",
-    "reqHepB",
-    "reqHepC",
-    "reqCovid",
-    "reqPreg",
-    "reqA1c",
-    "reqTotalChol",
-    "reqLdl",
-    "reqFastingGlucose",
-    "reqTriglycerides",
-    "reqHdl",
-    "reqSystolicBp",
-    "reqDiastolicBp",
-    "reqBmi",
-    "reqCreatinine",
-  ];
+  for (const key of ["values", "reqs", "nonce"]) {
+    if (input[key] === undefined || input[key] === null) {
+      throw new Error(`Missing required input: ${key}`);
+    }
+  }
 
-  for (const k of required) {
-    if (input[k] === undefined || input[k] === null) {
-      throw new Error(`Missing required input: ${k}`);
+  if (!Array.isArray(input.values) || input.values.length !== PREDICATE_COUNT) {
+    throw new Error(
+      `values must be an array of length ${PREDICATE_COUNT} (got ${Array.isArray(input.values) ? input.values.length : "non-array"})`,
+    );
+  }
+
+  if (!Array.isArray(input.reqs) || input.reqs.length !== PREDICATE_COUNT) {
+    throw new Error(
+      `reqs must be an array of length ${PREDICATE_COUNT} (got ${Array.isArray(input.reqs) ? input.reqs.length : "non-array"})`,
+    );
+  }
+
+  for (let i = 0; i < PREDICATE_COUNT; i += 1) {
+    const req = Number(input.reqs[i]);
+    if (req !== 0 && req !== 1) {
+      throw new Error(`reqs[${i}] must be 0 or 1`);
     }
   }
 
@@ -66,37 +52,9 @@ async function main() {
   const nonceField = toFieldFromHexString(nonceHex);
 
   const circuitInput = {
-    hivStatus: input.hivStatus,
-    hepBStatus: input.hepBStatus,
-    hepCStatus: input.hepCStatus,
-    covidStatus: input.covidStatus,
-    pregnancyStatus: input.pregnancyStatus,
-    hba1cX100: input.hba1cX100,
-    totalCholesterolX10: input.totalCholesterolX10,
-    ldlX10: input.ldlX10,
-    fastingGlucoseX10: input.fastingGlucoseX10,
-    triglyceridesX10: input.triglyceridesX10,
-    hdlX10: input.hdlX10,
-    systolicBpX10: input.systolicBpX10,
-    diastolicBpX10: input.diastolicBpX10,
-    bmiX10: input.bmiX10,
-    creatinineX10: input.creatinineX10,
+    values: input.values,
     nonce: nonceField,
-    reqHiv: input.reqHiv,
-    reqHepB: input.reqHepB,
-    reqHepC: input.reqHepC,
-    reqCovid: input.reqCovid,
-    reqPreg: input.reqPreg,
-    reqA1c: input.reqA1c,
-    reqTotalChol: input.reqTotalChol,
-    reqLdl: input.reqLdl,
-    reqFastingGlucose: input.reqFastingGlucose,
-    reqTriglycerides: input.reqTriglycerides,
-    reqHdl: input.reqHdl,
-    reqSystolicBp: input.reqSystolicBp,
-    reqDiastolicBp: input.reqDiastolicBp,
-    reqBmi: input.reqBmi,
-    reqCreatinine: input.reqCreatinine,
+    reqs: input.reqs,
   };
 
   const base = path.join(
