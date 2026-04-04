@@ -1,0 +1,25 @@
+{
+  "resourceType": "Observation",
+  "status": "final",
+  "code": {
+    "text": "Hepatitis B surface antigen",
+    "coding": [
+      {
+        "system": "http://loinc.org",
+        "code": "5196-1",
+        "display": "Hepatitis B virus surface Ag [Presence] in Serum or Plasma by Immunoassay"
+      }
+    ]
+  },
+  "effectiveDateTime": "2026-03-17T20:35:33Z",
+  "valueCodeableConcept": {
+    "text": "Positive",
+    "coding": [
+      {
+        "system": "http://snomed.info/sct",
+        "code": "10828004",
+        "display": "Positive"
+      }
+    ]
+  }
+}
